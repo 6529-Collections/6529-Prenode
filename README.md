@@ -1,5 +1,3 @@
-# 6529 PreNode
-
 1. [Infrastructure](#1-infrastructure)
 
 2. [Setup](#2-Setup)
@@ -21,8 +19,10 @@
 
 6. [Updates](#6-updates)
 
-- 6.1 [Manual Update](#61-manual-update)
-- 6.2 [Scripted Update](#52-scripted-update)
+   6.1 [Manual Update](#61-manual-update)
+   6.2 [Scripted Update](#52-scripted-update)
+
+7. [OpenAPI Definition](/docs/)
 
 ## 1. Infrastructure
 
