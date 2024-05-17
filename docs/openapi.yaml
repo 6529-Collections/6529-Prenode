@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: TDH API
+  title: 6529 PreNode API
   description: >-
     API for retrieving Total Days Held (TDH) including breakdowns for various
     collections.
