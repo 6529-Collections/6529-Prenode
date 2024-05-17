@@ -22,7 +22,7 @@
    - 6.1 [Manual Update](#61-manual-update)
    - 6.2 [Scripted Update](#52-scripted-update)
 
-7. [OpenAPI Definition](/6529-PreNode/docs/)
+7. [OpenAPI Definition](https://6529-collections.github.io/6529-PreNode/docs)
 
 ## 1. Infrastructure
 
