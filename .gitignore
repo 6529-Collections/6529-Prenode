@@ -1,0 +1,12 @@
+.env.*
+!.env.sample
+node_modules
+.vscode
+build
+.DS_Store
+*.pem
+dist/
+.esbuild/
+.idea
+src/*/.serverless
+src/*/.serverless-offline

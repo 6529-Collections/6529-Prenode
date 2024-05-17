@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "target": "es5",
+    "module": "commonjs",
+    "lib": ["es6"],
+    "allowJs": true,
+    "outDir": "build",
+    "rootDir": "src",
+    "strict": true,
+    "noImplicitAny": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true
+  },
+  "emitDecoratorMetadata": true,
+  "strictPropertyInitialization": false,
+  "exclude": [
+    "jest.config.js",
+    "serverless-config/**/*",
+    "ffmpeg-installer.js",
+    "**/*.js"
+  ]
+}
