@@ -9,7 +9,7 @@
 
 4. [Initialize DB](#4-initialize-db)
 
-   - 4.1 [Restore Snapshot](#41-restore)
+   - 4.1 [Restore Snapshot](#41-restore-snapshot)
    - 4.2 [Direct Load](#42-direct-load)
 
 5. [Run Services](#5-run-services)
@@ -20,7 +20,7 @@
 6. [Updates](#6-updates)
 
    - 6.1 [Manual Update](#61-manual-update)
-   - 6.2 [Scripted Update](#52-scripted-update)
+   - 6.2 [Scripted Update](#62-scripted-update)
 
 7. [OpenAPI Definition](https://6529-collections.github.io/6529-PreNode/docs)
 
