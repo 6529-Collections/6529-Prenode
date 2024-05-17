@@ -80,7 +80,7 @@ async function runTransactions() {
     await transactions.handler(GRADIENT_CONTRACT.toLowerCase());
     await transactions.handler(NEXTGEN_CONTRACT.toLowerCase());
   } catch (e) {
-    logger.error(`Error during delegations run: ${e}`);
+    logger.error(`Error during transactions run: ${e}`);
   } finally {
     RUNNING_TRX = false;
   }
@@ -91,7 +91,7 @@ async function runTDH() {
   try {
     await tdh.handler();
   } catch (e) {
-    logger.error(`Error during delegations run: ${e}`);
+    logger.error(`Error during TDH run: ${e}`);
   } finally {
     RUNNING_TDH = false;
   }
