@@ -1,28 +1,28 @@
 1. [Infrastructure](#1-infrastructure)
 
-2. [Setup](#2-Setup)
+2. [Setup](#2-setup)
 
-- 2.1 [Manual Setup](#21-manual-setup)
-- 2.2 [Scripted Setup](#22-scripted-setup)
+   - 2.1 [Manual Setup](#21-manual-setup)
+   - 2.2 [Scripted Setup](#22-scripted-setup)
 
 3. [Set Environment](#3-set-environment)
 
 4. [Initialize DB](#4-initialize-db)
 
-- 4.1 [Restore Snapshot](#41-restore)
-- 4.2 [Direct Load](#42-direct-load)
+   - 4.1 [Restore Snapshot](#41-restore)
+   - 4.2 [Direct Load](#42-direct-load)
 
 5. [Run Services](#5-run-services)
 
-- 5.1 [Manual Start](#51-manual-start)
-- 5.2 [Scripted Start](#52-scripted-start)
+   - 5.1 [Manual Start](#51-manual-start)
+   - 5.2 [Scripted Start](#52-scripted-start)
 
 6. [Updates](#6-updates)
 
-   6.1 [Manual Update](#61-manual-update)
-   6.2 [Scripted Update](#52-scripted-update)
+   - 6.1 [Manual Update](#61-manual-update)
+   - 6.2 [Scripted Update](#52-scripted-update)
 
-7. [OpenAPI Definition](/docs/)
+7. [OpenAPI Definition](/6529-PreNode/docs/)
 
 ## 1. Infrastructure
 
