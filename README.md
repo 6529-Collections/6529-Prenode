@@ -34,17 +34,15 @@
 
 ## 2. Setup
 
-Choose between [2.1 Manual Setup](#21-manual-setup) or [2.2 Scripted Setup](#22-scripted-setup)
-
-### 2.1 Manual Setup
-
-#### 2.1.1 Clone Repository
-
 Clone repository "6529-PreNode" at branch `main`
 
 ```
 git clone  --branch main https://github.com/6529-Collections/6529-PreNode.git
 ```
+
+Choose between [2.1 Manual Setup](#21-manual-setup) or [2.2 Scripted Setup](#22-scripted-setup)
+
+### 2.1 Manual Setup
 
 #### 2.1.2 Install NPM
 

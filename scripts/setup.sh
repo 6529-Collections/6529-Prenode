@@ -17,10 +17,6 @@ print_message() {
   echo
 }
 
-# Step 1: Clone the repository
-print_message "Cloning the repository..."
-git clone --branch $BRANCH $REPO_URL
-
 # Step 2: Install NPM
 print_message "Installing npm..."
 sudo apt update
