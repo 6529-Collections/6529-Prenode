@@ -42,57 +42,98 @@ git clone  --branch main https://github.com/6529-Collections/6529-PreNode.git
 
 then change directory to the repository
 
-```
+```bash
 cd 6529-PreNode/
 ```
 
-Choose between [2.1 Manual Setup](#21-manual-setup) or [2.2 Scripted Setup](#22-scripted-setup)
+### 2.21 Local Setup
 
-### 2.1 Manual Setup
-
-#### 2.1.2 Install NPM
-
-```
-sudo apt install npm
+```bash
+scripts/setup.sh
 ```
 
-Note: We need npm version v21. Get it using `n`
+### 2.2 AWS Setup
 
-```
-sudo npm i n -g
-```
+#### 2.2.2 Configure AWS CLI
 
-Select v21 using
+Sign in to your AWS account, create the IAM role you want to use, and generate a new Access Key.
 
-```
-sudo n 21
-```
+Set up your command line interface with this access key, secret access key, and your default region:
 
-Reset your session using `hash -r`
-
-#### 2.1.2 Install Project Dependencies
-
-```
-npm i
+```bash
+aws configure --profile 6529Prenode
 ```
 
-#### 2.1.3 Build Project
+You can run this whenever you want to update any of these settings.
 
-```
-npm run build
-```
+#### 2.2.2 Generate a key pair
 
-#### 2.1.4 PM2
-
-Services run using <a href="https://pm2.keymetrics.io/" target="_blank" rel="noopener noreferrer">PM2</a>
-
-##### 2.1.4.1 Install PM2
-
-```
-npm install pm2@latest -g
+```bash
+aws ec2 create-key-pair --key-name 6529PrenodeKey --query 'KeyMaterial' --output text > ~/.ssh/6529PrenodeKey.pem --profile 6529Prenode
 ```
 
-##### 2.1.4.2 Configure to Auto-restart on System Reboot
+#### 2.2.3 Get a domain name
+
+Your node will require SSL, and therefore a domain name. You will need to provide this domain name in the next step.
+
+You can use your own domain name, or get a free subdomain to use from Duck DNS:
+
+1. Sign in at duckdns.org
+1. Create a free subdomain that you'll use to access your Prenode
+1. Don't worry about configuring an IP address at this time, you will do that soon
+
+#### 2.2.4 Run CloudFormation Stack
+
+Find an Ubuntu AMI ID for your region. You can find the AMI ID for your region by visiting the <a href="https://cloud-images.ubuntu.com/locator/ec2/" target="_blank" rel="noopener noreferrer">Ubuntu Cloud Image Locator</a>. Use the filters at the bottom of the table to select your preferred region, and the latest version of Ubuntu, and be sure it is `amd64` (arm AMI's don't run in the free tier).
+
+Set these values in your local environment to make calling the CloudFormation script easier. You'll just need them once, to get things going. Replace the `YOUR-*` values with what your stack should use:
+
+```bash
+export PRENODE_DOMAIN=YOUR-DOMAIN-NAME;
+export PRENODE_EMAIL=YOUR-EMAIL;
+export PRENODE_AMI_ID=YOUR-AMI-ID;
+export PRENODE_DB_PASSWORD=YOUR-MADEUP-SECURE-RDS-PASSWORD;
+export PRENODE_KEY_NAME=YOUR-AWS-SSH-KEY-NAME;
+```
+
+Run the following command to create the CloudFormation stack:
+
+```bash
+aws cloudformation create-stack \
+  --stack-name Prenode6529 \
+  --template-body file://./scripts/aws-bootstrap.yaml \
+  --parameters ParameterKey=DomainName,ParameterValue=$PRENODE_DOMAIN \
+               ParameterKey=AdminEmail,ParameterValue=$PRENODE_EMAIL \
+               ParameterKey=AMIId,ParameterValue=$PRENODE_AMI_ID \
+               ParameterKey=MasterUserPassword,ParameterValue=$PRENODE_DB_PASSWORD \
+               ParameterKey=KeyName,ParameterValue=$PRENODE_KEY_NAME \
+  --profile 6529Prenode
+```
+
+Give it a few moments to create the stack. You can check the status of the stack by running:
+
+```bash
+aws cloudformation describe-stacks --stack-name Prenode6529 --profile 6529Prenode
+```
+
+Once the stack is created, you can hold the public IP address of your EC2 instance in an env var by running:
+
+```bash
+export PRENODE_IP=`aws cloudformation describe-stacks --stack-name Prenode6529 --query "Stacks[0].Outputs[?OutputKey=='ElasticIPAddress'].OutputValue" --output text --profile 6529Prenode`; echo $PRENODE_IP;
+```
+
+Now you can SSH into your EC2 instance:
+
+```bash
+ssh -i ~/.ssh/6529PrenodeKey.pem ubuntu@$PRENODE_IP
+```
+
+
+##### 2.2.4.1 Configure the domain name
+
+Return to duckdns.org and configure the IP address of your EC2 instance. This will allow you to access your Prenode using the domain name you created, over HTTPS.
+
+##### 2.2.4.2 Configure to Auto-restart on System Reboot
 
 To ensure your application starts on system boot, you can use PM2’s startup script generator. Run the following command and follow the instructions provided:
 
@@ -100,7 +141,7 @@ To ensure your application starts on system boot, you can use PM2’s startup sc
 pm2 startup
 ```
 
-##### 2.1.4.3 Set Up Log Rotation
+##### 2.2.4.3 Set Up Log Rotation
 
 PM2 can also manage log rotation, which is critical for ensuring that logs do not consume all available disk space.
 
@@ -116,12 +157,6 @@ pm2 set pm2-logrotate:retain 10      # Keep 10 rotated logs
 pm2 set pm2-logrotate:compress true  # Compress (gzip) rotated logs
 pm2 set pm2-logrotate:dateFormat YYYY-MM-DD # Set the date format used in the log file names
 pm2 set pm2-logrotate:rotateModule true     # Rotate the log of pm2-logrotate itself
-```
-
-### 2.2 Scripted Setup
-
-```
-scripts/setup.sh
 ```
 
 ## 3. Set Environment

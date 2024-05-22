@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Download and install tools and config for this 6529 PreNode instance
+# eg: ec2-setup.sh ADMIN_EMAIL PRENODE_DOMAIN
+
 # Exit immediately if a command exits with a non-zero status
 set -e
 set -o pipefail

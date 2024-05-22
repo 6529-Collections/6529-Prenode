@@ -1,0 +1,88 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: A template to deploy an EC2 instance with an Elastic IP, NGINX, Let's Encrypt SSL, and a MySQL RDS instance.
+
+Parameters:
+  DomainName:
+    Type: String
+    Description: Domain name for the SSL certificate.
+  AdminEmail:
+    Type: String
+    Description: Email address for SSL certificate registration and alerts.
+  AMIId:
+    Type: AWS::EC2::Image::Id
+    Description: AMI ID for the Ubuntu server.
+  MasterUserPassword:
+    Type: String
+    NoEcho: true
+    Description: Master password for the RDS instance.
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance.
+
+Resources:
+  PrenodeSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow access to ports 80, 443, and 22 for SSH.
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  MyEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      InstanceId: !Ref WebServerInstance
+
+  WebServerInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      KeyName: !Ref KeyName
+      ImageId: !Ref AMIId
+      SecurityGroups: [!Ref PrenodeSecurityGroup]
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          sudo apt-get update
+          sudo apt-get install -y nginx certbot python3-certbot-nginx
+          sudo certbot --nginx --non-interactive --agree-tos --email ${AdminEmail} --redirect -d ${DomainName}
+          curl -o setup.sh https://raw.githubusercontent.com/6529-Collections/6529-PreNode/main/scripts/ec2-setup.sh
+          # bash setup.sh
+      BlockDeviceMappings:
+        - DeviceName: "/dev/sda1"
+          Ebs:
+            VolumeSize: 30
+
+  Database:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceClass: db.t3.micro
+      AllocatedStorage: 20
+      Engine: mysql
+      MasterUsername: admin
+      MasterUserPassword: !Ref MasterUserPassword
+      DBName: MyDatabase
+
+Outputs:
+  WebsiteURL:
+    Description: URL of the website
+    Value: !Sub "https://${DomainName}/"
+  DBEndpoint:
+    Description: Endpoint for RDS database instance
+    Value: !GetAtt Database.Endpoint.Address
+  ElasticIPAddress:
+    Description: "The Elastic IP address associated with the instance"
+    Value: !GetAtt MyEIP.PublicIp
+    Export:
+      Name: !Sub "${AWS::StackName}-EIP"
