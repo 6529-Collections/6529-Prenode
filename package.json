@@ -4,7 +4,7 @@
   "main": "prenode.js",
   "scripts": {
     "postinstall": "npm run install:api",
-    "install:api": "cd src/api-serverless && npm install",
+    "install:api": "cd src/api-serverless && npm install --prefer-offline",
     "prenode:local:set_env": "NODE_ENV=local nodemon src/set_env.ts",
     "prenode:local:restore": "NODE_ENV=local nodemon src/restore_dumps.ts",
     "prenode:local:direct_load_nftd": "NODE_ENV=local nodemon src/direct_load_nftd.ts",
@@ -68,7 +68,6 @@
     "@wagmi/chains": "^1.8.0",
     "alchemy-sdk": "^3.3.1",
     "app-root-path": "^3.1.0",
-    "arweave": "^1.11.6",
     "axios": "^1.6.4",
     "bignumber.js": "^9.1.1",
     "bottleneck": "^2.19.5",
@@ -88,7 +87,6 @@
     "mysql": "^2.18.1",
     "node-cron": "^3.0.3",
     "node-fetch": "^2.7.0",
-    "openai": "^4.24.1",
     "short-uuid": "^4.2.2",
     "slugify": "^1.6.6",
     "winston": "^3.11.0"
