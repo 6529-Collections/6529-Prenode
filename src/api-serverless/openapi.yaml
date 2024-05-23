@@ -10,6 +10,7 @@ info:
 servers:
   - url: '/oracle'
   - url: 'https://api.seize.io/oracle'
+  - url: 'http://3.254.91.64:3000/oracle'
 
 paths:
   /tdh/total:
