@@ -10,7 +10,8 @@ import * as process from 'process';
 
 import { corsOptions } from './api-constants';
 import { prepEnvironment } from '../../env';
-import { returnJsonResult } from './api-helpers';
+
+import oracleRoutes from './oracle.routes';
 
 const requestLogger = Logger.get('API_REQUEST');
 const logger = Logger.get('API');
@@ -101,174 +102,10 @@ loadApi().then(() => {
   );
   app.enable('trust proxy');
 
-  const BASE_PATH = '/api';
+  const BASE_PATH = '/oracle';
   const apiRouter = asyncRouter();
 
-  apiRouter.get(
-    '/tdh/total',
-    async function (req: Request<{}, any, any, {}>, res: any) {
-      const result = await db.fetchTotalTDH();
-      return returnJsonResult(result, res);
-    }
-  );
-
-  apiRouter.get(
-    '/tdh/above/:value',
-    async function (
-      req: Request<
-        {
-          value: number;
-        },
-        any,
-        any,
-        {}
-      >,
-      res: any
-    ) {
-      const value = req.params.value;
-      if (isNaN(value)) {
-        return res.status(400).send({ error: 'Invalid value' });
-      }
-      const result = await db.fetchTDHAbove(Number(value));
-      return returnJsonResult(result, res);
-    }
-  );
-
-  apiRouter.get(
-    '/tdh/percentile/:value',
-    async function (
-      req: Request<
-        {
-          value: number;
-        },
-        any,
-        any,
-        {}
-      >,
-      res: any
-    ) {
-      const percentile = req.params.value;
-      if (
-        !percentile ||
-        isNaN(percentile) ||
-        !Number.isInteger(Number(percentile)) ||
-        percentile <= 0 ||
-        percentile > 10000
-      ) {
-        return res
-          .status(400)
-          .send(
-            'Invalid percentile value. Please provide an integer between 0 and 10000.'
-          );
-      }
-
-      const resolvedPercentile = Number(percentile) / 100;
-      const result = await db.fetchTDHPercentile(resolvedPercentile);
-      return returnJsonResult(result, res);
-    }
-  );
-
-  apiRouter.get(
-    '/tdh/cutoff/:value',
-    async function (
-      req: Request<
-        {
-          value: number;
-        },
-        any,
-        any,
-        {}
-      >,
-      res: any
-    ) {
-      const cutoff = req.params.value;
-      if (!Number.isInteger(Number(cutoff)) || cutoff < 1) {
-        return res
-          .status(400)
-          .send('Invalid cutoff value. Please provide a non-negative integer.');
-      }
-
-      const result = await db.fetchTDHCutoff(Number(cutoff));
-      return returnJsonResult(result, res);
-    }
-  );
-
-  apiRouter.get(
-    '/tdh/:address',
-    async function (
-      req: Request<
-        {
-          address: string;
-        },
-        any,
-        any,
-        {}
-      >,
-      res: any
-    ) {
-      const address = req.params.address;
-      const result = await db.fetchSingleAddressTDH(address);
-      return returnJsonResult(result, res);
-    }
-  );
-
-  apiRouter.get(
-    '/tdh/:address/breakdown',
-    async function (
-      req: Request<
-        {
-          address: string;
-        },
-        any,
-        any,
-        {}
-      >,
-      res: any
-    ) {
-      const address = req.params.address;
-      const result = await db.fetchSingleAddressTDHBreakdown(address);
-      return returnJsonResult(result, res);
-    }
-  );
-
-  apiRouter.get(
-    '/tdh/:address/memes_seasons',
-    async function (
-      req: Request<
-        {
-          address: string;
-        },
-        any,
-        any,
-        {}
-      >,
-      res: any
-    ) {
-      const address = req.params.address;
-      const result = await db.fetchSingleAddressTDHMemesSeasons(address);
-      return returnJsonResult(result, res);
-    }
-  );
-
-  apiRouter.get(
-    '/nfts/:contract?',
-    async function (
-      req: Request<
-        {
-          contract?: string;
-        },
-        any,
-        any,
-        {}
-      >,
-      res: any
-    ) {
-      const contract = req.params.contract;
-      const result = await db.fetchNfts(contract);
-      return returnJsonResult(result, res);
-    }
-  );
-
+  apiRouter.use('', oracleRoutes);
   rootRouter.use(BASE_PATH, apiRouter);
   app.use(rootRouter);
 

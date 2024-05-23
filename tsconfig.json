@@ -15,10 +15,5 @@
   },
   "emitDecoratorMetadata": true,
   "strictPropertyInitialization": false,
-  "exclude": [
-    "jest.config.js",
-    "serverless-config/**/*",
-    "ffmpeg-installer.js",
-    "**/*.js"
-  ]
+  "exclude": ["jest.config.js", "serverless-config/**/*", "**/*.js"]
 }

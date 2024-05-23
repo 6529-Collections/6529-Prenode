@@ -233,7 +233,7 @@ export const fetchTotalTDH = async () => {
   };
 };
 
-export const fetchNfts = async (contract?: string) => {
+export const fetchNfts = async (contract?: string, id?: string) => {
   const block = await getBlock();
   let sql = `SELECT * FROM ${NFTS_TABLE}`;
   if (contract) {
@@ -246,6 +246,10 @@ export const fetchNfts = async (contract?: string) => {
       contractQuery = NEXTGEN_CONTRACT;
     }
     sql = `${sql} WHERE contract = '${contractQuery.toLowerCase()}'`;
+
+    if (id) {
+      sql = `${sql} AND id = ${id}`;
+    }
   }
   sql = `${sql} ORDER BY contract ASC, id ASC`;
   const nftResponse = await sqlExecutor.execute(sql);
