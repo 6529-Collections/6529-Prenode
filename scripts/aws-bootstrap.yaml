@@ -56,9 +56,6 @@ Resources:
           #!/bin/bash
           sudo apt-get update
           sudo apt-get install -y nginx certbot python3-certbot-nginx
-          sudo certbot --nginx --non-interactive --agree-tos --email ${AdminEmail} --redirect -d ${DomainName}
-          curl -o setup.sh https://raw.githubusercontent.com/6529-Collections/6529-PreNode/main/scripts/ec2-setup.sh
-          # bash setup.sh
       BlockDeviceMappings:
         - DeviceName: "/dev/sda1"
           Ebs:
