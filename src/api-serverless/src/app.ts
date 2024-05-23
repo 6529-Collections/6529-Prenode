@@ -11,6 +11,7 @@ import * as process from 'process';
 import { corsOptions } from './api-constants';
 import { prepEnvironment } from '../../env';
 
+import docsRoutes from './docs.routes';
 import oracleRoutes from './oracle.routes';
 
 const requestLogger = Logger.get('API_REQUEST');
@@ -102,11 +103,11 @@ loadApi().then(() => {
   );
   app.enable('trust proxy');
 
-  const BASE_PATH = '/oracle';
   const apiRouter = asyncRouter();
 
-  apiRouter.use('', oracleRoutes);
-  rootRouter.use(BASE_PATH, apiRouter);
+  apiRouter.use('/docs', docsRoutes);
+  apiRouter.use('/oracle', oracleRoutes);
+  rootRouter.use('', apiRouter);
   app.use(rootRouter);
 
   app.use(customErrorMiddleware());

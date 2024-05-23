@@ -1,15 +1,21 @@
 openapi: 3.0.0
+
 info:
   title: 6529 PreNode API
   description: >-
-    API for retrieving Total Days Held (TDH) including breakdowns for various
-    collections.
+    API for retrieving Total Days Held (TDH) including breakdowns for 6529 TDH eligible
+    collections - The Memes, 6529 Gradient, NextGen
   version: 1.0.0
+
 servers:
-  - url: 'https://api.seize.io'
+  - url: '/oracle'
+  - url: 'https://api.seize.io/oracle'
+
 paths:
-  /api/tdh/total:
+  /tdh/total:
     get:
+      tags:
+        - TDH
       summary: Retrieve TDH Totals
       description: >-
         Get Total Days Held (TDH) including detailed breakdowns for memes,
@@ -39,8 +45,11 @@ paths:
                   block:
                     type: integer
                     description: The latest block number associated with the update.
-  '/api/tdh/above/{value}':
+
+  /tdh/above/{value}:
     get:
+      tags:
+        - TDH
       summary: Retrieve TDH Above Value
       description: >-
         Get a list of addresses with Total Days Held (TDH) above a specified
@@ -84,8 +93,11 @@ paths:
                   block:
                     type: integer
                     description: The latest block number associated with the update.
-  '/api/tdh/percentile/{value}':
+
+  /tdh/percentile/{value}:
     get:
+      tags:
+        - TDH
       summary: Retrieve TDH Percentile
       description: Get the TDH value at a specified percentile.
       parameters:
@@ -118,8 +130,11 @@ paths:
                   block:
                     type: integer
                     description: The latest block number associated with the update.
-  '/api/tdh/cutoff/{value}':
+
+  /tdh/cutoff/{value}:
     get:
+      tags:
+        - TDH
       summary: Retrieve TDH Cutoff
       description: Get the TDH value that represents the cutoff for the top X addresses.
       parameters:
@@ -161,8 +176,11 @@ paths:
                   block:
                     type: integer
                     description: The latest block number associated with the update.
-  '/api/tdh/{address}':
+
+  /tdh/{address}:
     get:
+      tags:
+        - TDH by Address
       summary: Retrieve TDH Details by Address
       description: >-
         Get Total Days Held (TDH) including detailed breakdowns for memes,
@@ -206,8 +224,11 @@ paths:
                   block:
                     type: integer
                     description: The latest block number associated with the update.
-  '/api/tdh/{address}/breakdown':
+
+  /tdh/{address}/breakdown:
     get:
+      tags:
+        - TDH by Address
       summary: Retrieve TDH Breakdown by Address
       description: >-
         Get a detailed breakdown of Total Days Held (TDH) for memes, gradients,
@@ -275,8 +296,11 @@ paths:
                   block:
                     type: integer
                     description: The latest block number associated with the update.
-  '/api/tdh/{address}/memes_seasons':
+
+  /tdh/{address}/memes_seasons:
     get:
+      tags:
+        - TDH by Address
       summary: Retrieve Meme Seasons TDH by Address
       description: >-
         Get a list of Total Days Held (TDH) for each meme season associated with
@@ -313,8 +337,62 @@ paths:
                   block:
                     type: integer
                     description: The latest block number associated with the update.
-  /api/nfts:
+
+  /tdh/{address}/memes_seasons/{id}:
     get:
+      tags:
+        - TDH by Address
+      summary: Retrieve TDH for a Specific Meme Season by Address
+      description: >-
+        Get a list of Total Days Held (TDH) for a specific meme season associated with
+        a specific address.
+      parameters:
+        - name: address
+          in: path
+          required: true
+          description: Address to retrieve the meme season TDH for.
+          schema:
+            type: string
+            example: '0x123456789abcdef'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The season number.
+      responses:
+        '200':
+          description: >-
+            A JSON object containing the season number, the total days held (TDH), and the latest block number.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  season:
+                    type: integer
+                    description: The season number.
+                  tdh:
+                    type: integer
+                    description: The total days held for the season.
+                  block:
+                    type: integer
+                    description: The latest block number associated with the update.
+        '404':
+          description: Season not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Error message
+
+  /nfts:
+    get:
+      tags:
+        - NFTs
       summary: Retrieve NFTs
       description: >-
         Get a list of NFTs along with detailed attributes such as contract
@@ -354,3 +432,198 @@ paths:
                   block:
                     type: integer
                     description: The latest block number associated with the update.
+
+  /nfts/memes_seasons:
+    get:
+      tags:
+        - NFTs
+      summary: Retrieve TDH by Meme Season
+      description: >-
+        Get the Total Days Held (TDH) aggregated by meme season.
+      responses:
+        '200':
+          description: >-
+            A JSON object containing an array of seasons with their corresponding TDH and the latest block number.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  seasons:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        season:
+                          type: integer
+                          description: The season number.
+                        tdh:
+                          type: integer
+                          description: The total days held for the season.
+                  block:
+                    type: integer
+                    description: The latest block number associated with the update.
+
+  /nfts/memes_seasons/{id}:
+    get:
+      tags:
+        - NFTs
+      summary: Retrieve TDH for a Specific Meme Season
+      description: >-
+        Get the Total Days Held (TDH) for a specific meme season.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The season number.
+      responses:
+        '200':
+          description: >-
+            A JSON object containing the season number, the total days held (TDH), and the latest block number.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  season:
+                    type: integer
+                    description: The season number.
+                  tdh:
+                    type: integer
+                    description: The total days held for the season.
+                  block:
+                    type: integer
+                    description: The latest block number associated with the update.
+        '404':
+          description: Season not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Error message
+
+  /nfts/{contract}:
+    get:
+      tags:
+        - NFTs
+      summary: Retrieve NFTs by Contract
+      description: >-
+        Get a list of NFTs for a specific contract along with detailed attributes such as contract
+        address, mint date, edition size, and Total Days Held (TDH).
+      parameters:
+        - name: contract
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - memes
+              - gradients
+              - nextgen
+          description: The contract type for the NFTs.
+      responses:
+        '200':
+          description: >-
+            A JSON object containing an array of NFTs for the specified contract and the latest block
+            number.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  nfts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: The identifier for the NFT.
+                        contract:
+                          type: string
+                          format: byte
+                          description: The smart contract address associated with the NFT.
+                        mint_date:
+                          type: string
+                          format: date-time
+                          description: The date and time when the NFT was minted.
+                        edition_size:
+                          type: integer
+                          description: The size of the edition for this NFT.
+                        tdh:
+                          type: integer
+                          description: TDH for the NFT.
+                  block:
+                    type: integer
+                    description: The latest block number associated with the update.
+
+  /nfts/{contract}/{id}:
+    get:
+      tags:
+        - NFTs
+      summary: Retrieve a specific NFT by Contract and ID
+      description: >-
+        Get detailed attributes of a specific NFT such as contract address,
+        mint date, edition size, Total Days Held (TDH), and the latest block number.
+      parameters:
+        - name: contract
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - memes
+              - gradients
+              - nextgen
+          description: The contract type for the NFT.
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The identifier for the NFT.
+      responses:
+        '200':
+          description: >-
+            A JSON object containing the detailed attributes of the specified NFT and the latest block
+            number.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: The identifier for the NFT.
+                  contract:
+                    type: string
+                    format: byte
+                    description: The smart contract address associated with the NFT.
+                  mint_date:
+                    type: string
+                    format: date-time
+                    description: The date and time when the NFT was minted.
+                  edition_size:
+                    type: integer
+                    description: The size of the edition for this NFT.
+                  tdh:
+                    type: integer
+                    description: TDH for the NFT.
+                  block:
+                    type: integer
+                    description: The latest block number associated with the update.
+        '404':
+          description: NFT not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Error message

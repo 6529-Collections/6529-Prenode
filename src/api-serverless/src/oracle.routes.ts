@@ -1,7 +1,7 @@
 import { Request } from 'express';
 import { returnJsonResult } from './api-helpers';
 import { asyncRouter } from './async.router';
-import * as db from '../../db-api';
+import * as db from './oracle.db';
 
 const router = asyncRouter();
 
@@ -135,11 +135,12 @@ router.get(
 );
 
 router.get(
-  '/tdh/:address/memes_seasons',
+  '/tdh/:address/memes_seasons/:season?',
   async function (
     req: Request<
       {
         address: string;
+        season?: string;
       },
       any,
       any,
@@ -148,7 +149,66 @@ router.get(
     res: any
   ) {
     const address = req.params.address;
+    const season = req.params.season;
     const result = await db.fetchSingleAddressTDHMemesSeasons(address);
+    if (season) {
+      try {
+        const seasonNumber = parseInt(season);
+        if (isNaN(seasonNumber)) {
+          throw new Error('Invalid season number');
+        }
+        const seasonResult = result.seasons.filter(
+          (r: any) => r.season === seasonNumber
+        );
+        if (seasonResult.length === 0) {
+          throw new Error('Season not found');
+        }
+        return returnJsonResult(
+          {
+            ...seasonResult[0],
+            block: result.block
+          },
+          res
+        );
+      } catch (e: any) {
+        return res.status(400).send({ error: e.message });
+      }
+    }
+    return returnJsonResult(result, res);
+  }
+);
+
+router.get(
+  '/nfts/memes_seasons/:season?',
+  async function (
+    req: Request<
+      {
+        season?: string;
+      },
+      any,
+      any,
+      {}
+    >,
+    res: any
+  ) {
+    const season = req.params.season;
+    const result = await db.fetchSeasonsTDH(season);
+    if (season) {
+      const seasonNumber = parseInt(season);
+      if (isNaN(seasonNumber)) {
+        return res.status(400).send({ error: 'Invalid season number' });
+      }
+      if (result.seasons.length === 0) {
+        return res.status(404).send({ error: 'Season not found' });
+      }
+      return returnJsonResult(
+        {
+          ...result.seasons[0],
+          block: result.block
+        },
+        res
+      );
+    }
     return returnJsonResult(result, res);
   }
 );
