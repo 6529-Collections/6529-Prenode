@@ -7,7 +7,7 @@ const router = asyncRouter();
 
 export default router;
 
-const swaggerDocument = YAML.load('../../docs/openapi.yaml');
+const swaggerDocument = YAML.load('./openapi.yaml');
 router.use(
   '',
   SwaggerUI.serve,

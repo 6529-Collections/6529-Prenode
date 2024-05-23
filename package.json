@@ -15,7 +15,7 @@
     "direct_load_nftd": "NODE_ENV=production node build/direct_load_nftd.js",
     "direct_load_trx": "NODE_ENV=production node build/direct_load_trx.js",
     "prenode": "NODE_ENV=production node build/prenode.js",
-    "api": "NODE_ENV=production node build/index.js",
+    "api": "cd build/ && NODE_ENV=production node index.js",
     "build": "rimraf ./build && jest && NODE_OPTIONS=--max-old-space-size=8192 tsc -p tsconfig.json && npm run build:api",
     "build:api": "cd src/api-serverless && npm run build && cp -r dist/* ../../build/",
     "tsc": "./node_modules/typescript/bin/tsc",
