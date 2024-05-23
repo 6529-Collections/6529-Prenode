@@ -26,28 +26,23 @@ sudo n 21
 # Reset session
 hash -r
 
-# Step 4: Configure npm
-print_message "Configuring npm..."
-npm config set maxsockets 5
-npm config set prefer-offline true
-
-# Step 5: Install dependencies
+# Step 4: Install dependencies
 print_message "Installing dependencies..."
 npm install
 
-# Step 6: Build the project
+# Step 5: Build the project
 print_message "Building the project..."
 npm run build
 
-# Step 7: Install PM2
+# Step 6: Install PM2
 print_message "Installing PM2..."
 sudo npm install -g pm2@latest
 
-# Step 8: Configure PM2 to auto-restart on system reboot
+# Step 7: Configure PM2 to auto-restart on system reboot
 print_message "Configuring PM2 to auto-restart on system reboot..."
 pm2 startup
 
-# Step 9: Set up PM2 log rotation
+# Step 8: Set up PM2 log rotation
 print_message "Setting up PM2 log rotation..."
 pm2 install pm2-logrotate
 pm2 set pm2-logrotate:max_size 100M
