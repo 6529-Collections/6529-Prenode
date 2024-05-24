@@ -14,6 +14,9 @@ Parameters:
   AMIId:
     Type: AWS::EC2::Image::Id
     Description: AMI ID for the Ubuntu server.
+  Region:
+    Type: String
+    Description: AWS region to deploy the stack.
   MasterUserPassword:
     Type: String
     NoEcho: true
@@ -21,6 +24,9 @@ Parameters:
   KeyName:
     Type: AWS::EC2::KeyPair::KeyName
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance.
+  AlchemyAPIKey:
+    Type: String
+    Description: API key for accessing the Alchemy service.
 
 Resources:
   PrenodeDNSRecord:
@@ -66,14 +72,20 @@ Resources:
     Properties:
       VpcId: !Ref PrenodeVPC
       CidrBlock: 10.0.1.0/24
-      AvailabilityZone: us-west-2a
+      AvailabilityZone: 
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: !Ref 'AWS::Region'
 
   PrenodeSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref PrenodeVPC
       CidrBlock: 10.0.2.0/24
-      AvailabilityZone: us-west-2b
+      AvailabilityZone: 
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: !Ref 'AWS::Region'
 
   PrenodeSubnetRouteTableAssociation1:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -117,57 +129,6 @@ Resources:
           ToPort: 3306
           SourceSecurityGroupId: !Ref PrenodeServerSecurityGroup
 
-  PrenodeWebServerInstance:
-    Type: AWS::EC2::Instance
-    Properties:
-      InstanceType: t3.small
-      KeyName: !Ref KeyName
-      ImageId: !Ref AMIId
-      SubnetId: !Ref PrenodeSubnet1
-      SecurityGroupIds: [!Ref PrenodeServerSecurityGroup]
-      UserData:
-        Fn::Base64: !Sub |
-          #!/bin/bash
-          apt-get update
-          apt-get install -y nginx python3-pip certbot python3-certbot-nginx
-          systemctl start nginx
-          certbot --nginx -d ${DomainName} --non-interactive --agree-tos -m ${AdminEmail} --deploy-hook >(
-            echo '
-            server {
-              listen 443 ssl;
-              ssl_certificate /etc/letsencrypt/live/${DomainName}/fullchain.pem;
-              ssl_certificate_key /etc/letsencrypt/live/${DomainName}/privkey.pem;
-              include /etc/letsencrypt/options-ssl-nginx.conf;
-              ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
-              location / {
-                proxy_pass http://localhost:3000;
-              }
-            }' | sudo tee /etc/nginx/sites-enabled/default > /dev/null && sudo systemctl reload nginx
-          )
-          su -l ubuntu -c "
-            cd ~
-            git clone --branch main https://github.com/6529-Collections/6529-PreNode.git 
-            cd 6529-PreNode
-            bash scripts/setup.sh
-            sudo env PATH=$PATH:/usr/local/bin /usr/local/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
-            pm2 install pm2-logrotate
-            pm2 set pm2-logrotate:max_size 100M  # Rotate logs once they reach 100MB
-            pm2 set pm2-logrotate:retain 10      # Keep 10 rotated logs
-            pm2 set pm2-logrotate:compress true  # Compress (gzip) rotated logs
-            pm2 set pm2-logrotate:dateFormat YYYY-MM-DD # Set the date format used in the log file names
-            pm2 set pm2-logrotate:rotateModule true     # Rotate the log of pm2-logrotate itself
-          "
-      BlockDeviceMappings:
-        - DeviceName: "/dev/sda1"
-          Ebs:
-            VolumeSize: 30
-
-  PrenodeEIP:
-    Type: AWS::EC2::EIP
-    Properties:
-      Domain: vpc
-      InstanceId: !Ref PrenodeWebServerInstance
-
   PrenodeDatabase:
     Type: AWS::RDS::DBInstance
     Properties:
@@ -187,6 +148,72 @@ Resources:
       SubnetIds: 
         - !Ref PrenodeSubnet1
         - !Ref PrenodeSubnet2
+
+  PrenodeEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      InstanceId: !Ref PrenodeWebServerInstance
+      
+  PrenodeWebServerInstance:
+    Type: AWS::EC2::Instance
+    DependsOn: PrenodeDatabase
+    Properties:
+      InstanceType: t3.small
+      KeyName: !Ref KeyName
+      ImageId: !Ref AMIId
+      SubnetId: !Ref PrenodeSubnet1
+      SecurityGroupIds: [!Ref PrenodeServerSecurityGroup]
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          apt-get update
+          apt-get install -y nginx python3-pip certbot python3-certbot-nginx
+          systemctl start nginx
+          certbot --non-interactive --nginx --redirect -d ${DomainName} --agree-tos -m ${AdminEmail} --deploy-hook >(
+            echo '
+            server {
+              listen 80;
+              server_name ${DomainName};
+              return 301 https://$host$request_uri; # Redirect all HTTP requests to HTTPS
+            } 
+            server {
+              listen 443 ssl;
+              server_name ${DomainName};
+              ssl_certificate /etc/letsencrypt/live/${DomainName}/fullchain.pem;
+              ssl_certificate_key /etc/letsencrypt/live/${DomainName}/privkey.pem;
+              ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+              location / {
+                proxy_pass http://localhost:3000;
+              }
+            }' | sudo tee /etc/nginx/sites-enabled/default > /dev/null
+          )
+          certbot install --cert-name ${DomainName}
+          systemctl reload nginx
+          su -l ubuntu -c "
+            cd ~
+            git clone --branch main https://github.com/6529-Collections/6529-PreNode.git 
+            cd 6529-PreNode
+            echo '
+            DB_HOST=${PrenodeDatabase.Endpoint.Address}
+            DB_PORT=3306
+            DB_ADMIN=admin
+            DB_ADMIN_PASS=${MasterUserPassword}
+            DB_NAME=tdhprenode
+            DB_USER=tdhuser
+            DB_PASS=${MasterUserPassword}
+            DB_HOST_READ=${PrenodeDatabase.Endpoint.Address}
+            DB_USER_READ=tdhuser-read
+            DB_PASS_READ=${MasterUserPassword}
+            ALCHEMY_API_KEY=${AlchemyAPIKey}
+            ' > .env
+            bash scripts/setup.sh
+            sudo env PATH=$PATH:/usr/local/bin /usr/local/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
+          "
+      BlockDeviceMappings:
+        - DeviceName: "/dev/sda1"
+          Ebs:
+            VolumeSize: 30
 
 Outputs:
   WebsiteURL:

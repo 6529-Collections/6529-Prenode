@@ -8,19 +8,19 @@ import fs from 'fs';
 const logger = Logger.get('LOAD_ENV');
 
 export async function setEnv() {
-  await ask('Press Enter to start the script or Ctrl+C to exit', false, false);
+  // await ask('Press Enter to start the script or Ctrl+C to exit', false, false);
 
-  const dbHost = await ask('Enter DB Host:', false, true);
-  let dbPort: any = await ask('Enter DB Port:', false, true);
+  const dbHost = process.env.DB_HOST || await ask('Enter DB Host:', false, true);
+  let dbPort: any = process.env.DB_PORT || await ask('Enter DB Port:', false, true);
   while (isNaN(parseInt(dbPort))) {
     dbPort = await ask('Enter DB Port:', false, true);
   }
   dbPort = parseInt(dbPort);
-  const dbAdminUser = await ask('Enter DB Admin User:', false, true);
-  const dbAdminPassword = await ask('Enter DB Admin Password:', true, false);
-  const dbNewDB = await ask('Enter New DB Name:', false, true);
-  const dbNewUser = await ask('Enter New DB User:', false, true);
-  const dbNewUserPassword = await ask(
+  const dbAdminUser = process.env.DB_ADMIN || await ask('Enter DB Admin User:', false, true);
+  const dbAdminPassword = process.env.DB_ADMIN_PASS || await ask('Enter DB Admin Password:', true, false);
+  const dbNewDB = process.env.DB_NAME || await ask('Enter New DB Name:', false, true);
+  const dbNewUser = process.env.DB_USER || await ask('Enter New DB User:', false, true);
+  const dbNewUserPassword = process.env.DB_PASS || await ask(
     'Enter New DB User Password:',
     true,
     true
