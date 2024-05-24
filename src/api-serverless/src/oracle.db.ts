@@ -185,7 +185,7 @@ export async function fetchTDHAbove(value: number) {
     return {
       consolidation_key: t.consolidation_key,
       tdh: t.boosted_tdh,
-      addresses: JSON.parse(t.wallets.map((w: string) => w.toLowerCase())),
+      addresses: JSON.parse(t.wallets).map((w: string) => w.toLowerCase()),
       block
     };
   });
@@ -245,7 +245,7 @@ export async function fetchTDHCutoff(cutoff: number) {
     return {
       consolidation_key: t.consolidation_key,
       tdh: t.boosted_tdh,
-      addresses: JSON.parse(t.wallets.map((w: string) => w.toLowerCase()))
+      addresses: JSON.parse(t.wallets).map((w: string) => w.toLowerCase())
     };
   });
   return {
