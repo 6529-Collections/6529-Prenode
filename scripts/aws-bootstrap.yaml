@@ -4,7 +4,10 @@ Description: A template to deploy an EC2 instance with an Elastic IP, NGINX, Let
 Parameters:
   DomainName:
     Type: String
-    Description: Domain name for the SSL certificate.
+    Description: Fully-qualified domain name to link to the SSL certificate, e.g., 6529node.yercooldomain.wtf
+  HostedZoneId:
+    Type: String
+    Description: The ID of the existing Route 53 hosted zone.
   AdminEmail:
     Type: String
     Description: Email address for SSL certificate registration and alerts.
@@ -20,11 +23,80 @@ Parameters:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance.
 
 Resources:
-  PrenodeSecurityGroup:
+  PrenodeDNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref DomainName
+      Type: A
+      TTL: '300'
+      ResourceRecords:
+        - !GetAtt PrenodeEIP.PublicIp
+
+  PrenodeVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+
+  PrenodeInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    DependsOn: PrenodeVPC
+
+  PrenodeGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref PrenodeVPC
+      InternetGatewayId: !Ref PrenodeInternetGateway
+
+  PrenodeRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref PrenodeVPC
+
+  PrenodeRoute:
+    Type: AWS::EC2::Route
+    DependsOn: PrenodeGateway
+    Properties:
+      RouteTableId: !Ref PrenodeRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref PrenodeInternetGateway
+
+  PrenodeSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref PrenodeVPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: us-west-2a
+
+  PrenodeSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref PrenodeVPC
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: us-west-2b
+
+  PrenodeSubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrenodeSubnet1
+      RouteTableId: !Ref PrenodeRouteTable
+
+  PrenodeSubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrenodeSubnet2
+      RouteTableId: !Ref PrenodeRouteTable
+
+  PrenodeServerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow access to ports 80, 443, and 22 for SSH.
+      VpcId: !Ref PrenodeVPC
       SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
@@ -33,43 +105,88 @@ Resources:
           FromPort: 443
           ToPort: 443
           CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 0.0.0.0/0
 
-  MyEIP:
-    Type: AWS::EC2::EIP
+  PrenodeRDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
     Properties:
-      Domain: vpc
-      InstanceId: !Ref WebServerInstance
+      GroupDescription: RDS security group allowing access from EC2
+      VpcId: !Ref PrenodeVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !Ref PrenodeServerSecurityGroup
 
-  WebServerInstance:
+  PrenodeWebServerInstance:
     Type: AWS::EC2::Instance
     Properties:
-      InstanceType: t2.micro
+      InstanceType: t3.small
       KeyName: !Ref KeyName
       ImageId: !Ref AMIId
-      SecurityGroups: [!Ref PrenodeSecurityGroup]
+      SubnetId: !Ref PrenodeSubnet1
+      SecurityGroupIds: [!Ref PrenodeServerSecurityGroup]
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
-          sudo apt-get update
-          sudo apt-get install -y nginx certbot python3-certbot-nginx
+          apt-get update
+          apt-get install -y nginx python3-pip certbot python3-certbot-nginx
+          systemctl start nginx
+          certbot --nginx -d ${DomainName} --non-interactive --agree-tos -m ${AdminEmail} --deploy-hook >(
+            echo '
+            server {
+              listen 443 ssl;
+              ssl_certificate /etc/letsencrypt/live/${DomainName}/fullchain.pem;
+              ssl_certificate_key /etc/letsencrypt/live/${DomainName}/privkey.pem;
+              include /etc/letsencrypt/options-ssl-nginx.conf;
+              ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+              location / {
+                proxy_pass http://localhost:3000;
+              }
+            }' | sudo tee /etc/nginx/sites-enabled/default > /dev/null && sudo systemctl reload nginx
+          )
+          su -l ubuntu -c "
+            cd ~
+            git clone --branch main https://github.com/6529-Collections/6529-PreNode.git 
+            cd 6529-PreNode
+            bash scripts/setup.sh
+            sudo env PATH=$PATH:/usr/local/bin /usr/local/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
+            pm2 install pm2-logrotate
+            pm2 set pm2-logrotate:max_size 100M  # Rotate logs once they reach 100MB
+            pm2 set pm2-logrotate:retain 10      # Keep 10 rotated logs
+            pm2 set pm2-logrotate:compress true  # Compress (gzip) rotated logs
+            pm2 set pm2-logrotate:dateFormat YYYY-MM-DD # Set the date format used in the log file names
+            pm2 set pm2-logrotate:rotateModule true     # Rotate the log of pm2-logrotate itself
+          "
       BlockDeviceMappings:
         - DeviceName: "/dev/sda1"
           Ebs:
             VolumeSize: 30
 
-  Database:
+  PrenodeEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      InstanceId: !Ref PrenodeWebServerInstance
+
+  PrenodeDatabase:
     Type: AWS::RDS::DBInstance
     Properties:
-      DBInstanceClass: db.t3.micro
-      AllocatedStorage: 20
+      DBInstanceClass: db.t4g.micro
+      AllocatedStorage: 100
       Engine: mysql
       MasterUsername: admin
       MasterUserPassword: !Ref MasterUserPassword
-      DBName: MyDatabase
+      DBName: PrenodeDatabase
+      VPCSecurityGroups: [!Ref PrenodeRDSSecurityGroup]
+      DBSubnetGroupName: !Ref PrenodeDBSubnetGroup
+
+  PrenodeDBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for RDS instance
+      SubnetIds: 
+        - !Ref PrenodeSubnet1
+        - !Ref PrenodeSubnet2
 
 Outputs:
   WebsiteURL:
@@ -77,9 +194,9 @@ Outputs:
     Value: !Sub "https://${DomainName}/"
   DBEndpoint:
     Description: Endpoint for RDS database instance
-    Value: !GetAtt Database.Endpoint.Address
+    Value: !GetAtt PrenodeDatabase.Endpoint.Address
   ElasticIPAddress:
     Description: "The Elastic IP address associated with the instance"
-    Value: !GetAtt MyEIP.PublicIp
+    Value: !GetAtt PrenodeEIP.PublicIp
     Export:
       Name: !Sub "${AWS::StackName}-EIP"
