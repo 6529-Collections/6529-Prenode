@@ -97,7 +97,7 @@ router.get(
 );
 
 router.get(
-  '/tdh/:address',
+  '/address/:address',
   async function (
     req: Request<
       {
@@ -116,7 +116,7 @@ router.get(
 );
 
 router.get(
-  '/tdh/:address/breakdown',
+  '/address/:address/breakdown',
   async function (
     req: Request<
       {
@@ -135,7 +135,7 @@ router.get(
 );
 
 router.get(
-  '/tdh/:address/memes_seasons/:season?',
+  '/address/:address/memes_seasons/:season?',
   async function (
     req: Request<
       {
