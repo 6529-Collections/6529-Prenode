@@ -68,6 +68,35 @@ export const fetchSingleAddressTDH = async (address: string) => {
   };
 };
 
+export const fetchSingleAddressTDHForNft = async (
+  address: string,
+  contract: string,
+  id: number
+) => {
+  const { block, tdh } = await fetchBlockAndAddressTdh(address);
+  const addressTdh = tdh[0]?.tdh;
+  let nftTdh = 0;
+  if (addressTdh) {
+    const boost = addressTdh.boost ?? 1;
+    let nfts = [];
+    if (contract === 'memes') {
+      nfts = JSON.parse(tdh[0]?.memes ?? JSON.stringify([]));
+    } else if (contract === 'gradients') {
+      nfts = JSON.parse(tdh[0]?.gradients ?? JSON.stringify([]));
+    } else if (contract === 'nextgen') {
+      nfts = JSON.parse(tdh[0]?.nextgen ?? JSON.stringify([]));
+    }
+    const nft = nfts.find((m: any) => m.id == id);
+    if (nft) {
+      nftTdh = parseToken(boost, nft).tdh;
+    }
+  }
+  return {
+    tdh: formatNumber(nftTdh),
+    block
+  };
+};
+
 export const fetchSingleAddressTDHBreakdown = async (address: string) => {
   const { block, tdh } = await fetchBlockAndAddressTdh(address);
   const boost = tdh[0]?.boost ?? 1;
