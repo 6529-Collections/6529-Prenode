@@ -71,7 +71,7 @@ export async function setEnv() {
 
   await dataSource.destroy();
 
-  const alchemyKey = await ask('Enter Alchemy API Key:', true, true);
+  const alchemyKey = process.env.ALCHEMY_API_KEY || await ask('Enter Alchemy API Key:', true, true);
 
   // Update .env file
   writeEnv(

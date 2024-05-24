@@ -167,24 +167,31 @@ Resources:
           apt-get update
           apt-get install -y nginx python3-pip certbot python3-certbot-nginx
           systemctl start nginx
-          certbot --non-interactive --nginx --redirect -d ${DomainName} --agree-tos -m ${AdminEmail} --deploy-hook >(
-            echo '
-            server {
-              listen 80;
-              server_name ${DomainName};
-              return 301 https://$host$request_uri; # Redirect all HTTP requests to HTTPS
-            } 
-            server {
-              listen 443 ssl;
-              server_name ${DomainName};
-              ssl_certificate /etc/letsencrypt/live/${DomainName}/fullchain.pem;
-              ssl_certificate_key /etc/letsencrypt/live/${DomainName}/privkey.pem;
-              ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+          certbot --non-interactive --nginx --redirect -d ${DomainName} --agree-tos -m ${AdminEmail}
+          echo '
+          server {
+              root /var/www/html;
+              index index.html;
+              server_name ${DomainName}; # managed by Certbot
+              listen [::]:443 ssl ipv6only=on; # managed by Certbot
+              listen 443 ssl; # managed by Certbot
+              ssl_certificate /etc/letsencrypt/live/${DomainName}/fullchain.pem; # managed by Certbot
+              ssl_certificate_key /etc/letsencrypt/live/${DomainName}/privkey.pem; # managed by Certbot
+              include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+              ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
               location / {
                 proxy_pass http://localhost:3000;
               }
-            }' | sudo tee /etc/nginx/sites-enabled/default > /dev/null
-          )
+          }
+          server {
+              if ($host = ${DomainName}) {
+                  return 301 https://$host$request_uri;
+              } # managed by Certbot
+              listen 80 ;
+              listen [::]:80 ;
+              server_name ${DomainName};
+              return 404; # managed by Certbot
+          }' | sudo tee /etc/nginx/sites-enabled/default > /dev/null
           certbot install --cert-name ${DomainName}
           systemctl reload nginx
           su -l ubuntu -c "
@@ -203,13 +210,11 @@ Resources:
             DB_USER_READ=tdhuser-read
             DB_PASS_READ=${MasterUserPassword}
             ALCHEMY_API_KEY=${AlchemyAPIKey}
-            ' > .env
+            ' > .env.prenode
             bash scripts/setup.sh
             sudo env PATH=$PATH:/usr/local/bin /usr/local/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
             npm run set_env # Configure the env and prep the database
             npm run restore # Restore database from the latest snapshot
-            npm run direct_load_nftd # Restore data from NFTDelegation contract
-            npm run direct_load_trx # Restore transaction data
             bash scripts/start.sh # Start the server with pm2
           "
       BlockDeviceMappings:
