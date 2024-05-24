@@ -14,9 +14,6 @@ Parameters:
   AMIId:
     Type: AWS::EC2::Image::Id
     Description: AMI ID for the Ubuntu server.
-  Region:
-    Type: String
-    Description: AWS region to deploy the stack.
   MasterUserPassword:
     Type: String
     NoEcho: true
