@@ -192,7 +192,7 @@ Resources:
           systemctl reload nginx
           su -l ubuntu -c "
             cd ~
-            git clone --branch main https://github.com/6529-Collections/6529-PreNode.git 
+            git clone --branch cf-setup https://github.com/6529-Collections/6529-PreNode.git 
             cd 6529-PreNode
             echo '
             DB_HOST=${PrenodeDatabase.Endpoint.Address}
@@ -209,6 +209,11 @@ Resources:
             ' > .env
             bash scripts/setup.sh
             sudo env PATH=$PATH:/usr/local/bin /usr/local/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
+            npm run set_env # Configure the env and prep the database
+            npm run restore # Restore database from the latest snapshot
+            npm run direct_load_nftd # Restore data from NFTDelegation contract
+            npm run direct_load_trx # Restore transaction data
+            bash scripts/start.sh # Start the server with pm2
           "
       BlockDeviceMappings:
         - DeviceName: "/dev/sda1"

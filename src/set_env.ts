@@ -8,6 +8,7 @@ import fs from 'fs';
 const logger = Logger.get('LOAD_ENV');
 
 export async function setEnv() {
+  await loadEnv();
   // await ask('Press Enter to start the script or Ctrl+C to exit', false, false);
 
   const dbHost = process.env.DB_HOST || await ask('Enter DB Host:', false, true);
