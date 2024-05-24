@@ -2,10 +2,10 @@
 
 2. [Setup](#2-setup)
 
-   - 2.1 [Manual Setup](#21-manual-setup)
-   - 2.2 [Scripted Setup](#22-scripted-setup)
+   - 2.1 [Scripted Setup](#22-scripted-setup)
+   - 2.2 [Manual Setup](#21-manual-setup)
 
-3. [Set Environment](#3-set-environment)
+3. [Manual Configuration](#3-set-environment)
 
 4. [Initialize DB](#4-initialize-db)
 
@@ -22,17 +22,17 @@
    - 6.1 [Manual Update](#61-manual-update)
    - 6.2 [Scripted Update](#62-scripted-update)
 
-7. [OpenAPI Definition](https://6529-collections.github.io/6529-Prenode/docs)
+7. [OpenAPI Definition](https://6529-collections.github.io/6529-PreNode/docs)
 
 ## 1. Infrastructure
 
-The 6529 Prenode is a service that provides a RESTful API for querying TDH data from the 6529 Collections smart contracts. It is the same logic used on seize.io, but provides a way to query data from the blockchain without needing to visit a web page.
+The 6529 PreNode is a service that provides a RESTful API for querying TDH data from the 6529 Collections smart contracts. It is the same logic used on seize.io, but provides a way to query data from the blockchain without needing to visit a web page.
 
 To run the prenode, you'll need a database, a server configured with SSL, and a domain name.
 
 Since the setup of all these things can be a little tricky, we've provided a CloudFormation script that will automate much of the setup process for you. This script will create an EC2 instance, an RDS instance, and a Route 53 domain, and configure them all to work together in a standalone VPC environment (and no, you don't need to know what all that means to get it going).
 
-## 2. Setup
+## 2. AWS Setup
 
 You'll need just a few things in place before starting the automated setup process.
 
@@ -42,9 +42,7 @@ You'll need just a few things in place before starting the automated setup proce
 
 - Since the node is required to run over SSL, you'll need a domain name. The automated setup process will then get a free SSL cert for you.
 
-### 2.2 AWS Setup
-
-#### 2.2.2 Configure AWS CLI
+#### 2.1 Configure AWS CLI
 
 Sign in to your AWS account, create the IAM role you want to use, and generate a new Access Key.
 
@@ -56,13 +54,13 @@ aws configure --profile 6529Prenode
 
 You can run this whenever you want to update any of these settings.
 
-#### 2.2.2 Generate a key pair
+#### 2.2 Generate a key pair
 
 ```bash
 aws ec2 create-key-pair --key-name 6529PrenodeKey --query 'KeyMaterial' --output text > ~/.ssh/6529PrenodeKey.pem --profile 6529Prenode
 ```
 
-#### 2.2.3 Get a domain name
+#### 2.3 Get a domain name
 
 Your node will require SSL, and therefore a domain name. You will need to provide this domain name in the next step.
 
@@ -70,7 +68,7 @@ The automated setup process will configure the domain name for you, if you have 
 
 Before you proceed to the next step, go get a new domain name, or transfer an existing one to Route 53. You can do this by visiting the <a href="https://console.aws.amazon.com/route53/home" target="_blank" rel="noopener noreferrer">Route 53 console</a>.
 
-#### 2.2.4 Run CloudFormation Stack
+#### 2.4 Create the CloudFormation Stack
 
 Find an Ubuntu AMI ID for your region. You can find the AMI ID for your region by visiting the <a href="https://cloud-images.ubuntu.com/locator/ec2/" target="_blank" rel="noopener noreferrer">Ubuntu Cloud Image Locator</a>. Use the filters at the bottom of the table to select your preferred region, and the latest version of Ubuntu, and be sure it is `amd64` (arm AMI's don't run in the free tier).
 
@@ -114,45 +112,28 @@ Once the stack is created, you can hold the public IP address of your EC2 instan
 export PRENODE_IP=`aws cloudformation describe-stacks --stack-name Prenode6529 --query "Stacks[0].Outputs[?OutputKey=='ElasticIPAddress'].OutputValue" --output text --profile 6529Prenode`; echo $PRENODE_IP;
 ```
 
-Now you can SSH into your EC2 instance, and set it up:
+Now you can SSH into your EC2 instance, if you want to do any manual configuration.:
 
 ```bash
 ssh -i ~/.ssh/6529PrenodeKey.pem ubuntu@$PRENODE_IP
 ```
 
-##### 2.2.4.1 Configure the domain name
-
-Return to duckdns.org and configure the IP address of your EC2 instance. This will allow you to access your Prenode using the domain name you created, over HTTPS.
-
-##### 2.2.4.2 Configure to Auto-restart on System Reboot
-
-To ensure your application starts on system boot, you can use PM2’s startup script generator. Run the following command and follow the instructions provided:
-
-```
-pm2 startup
-# sudo env PATH=$PATH:/usr/local/bin /usr/local/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
-```
-
-##### 2.2.4.3 Set Up Log Rotation
-
-PM2 can also manage log rotation, which is critical for ensuring that logs do not consume all available disk space.
-
 ## 3. Manual configuration
 
-If you'd like to run the 6529 Prenode in any other context, you can manually configure it using the following steps.
+If you'd like to run the 6529 PreNode in any other context, you can manually configure it using the following steps.
 
 ### 3.1 Get the code
 
-Clone repository "6529-Prenode" at branch `main`
+Clone repository "6529-PreNode" at branch `main`
 
 ```
-git clone --branch main https://github.com/6529-Collections/6529-Prenode.git
+git clone --branch main https://github.com/6529-Collections/6529-PreNode.git
 ```
 
 then change directory to the repository
 
 ```bash
-cd 6529-Prenode/
+cd 6529-PreNode/
 ```
 
 ```bash
@@ -182,7 +163,7 @@ To run the project you need a file to hold environment variable. If you need to 
 npm run set_env
 ```
 
-<a href="https://github.com/6529-Collections/6529-Prenode/blob/main/.env.sample" target="_blank" rel="noopener noreferrer">Sample .env file</a>
+<a href="https://github.com/6529-Collections/6529-PreNode/blob/main/.env.sample" target="_blank" rel="noopener noreferrer">Sample .env file</a>
 
 ## 3.2 Initialize DB
 
@@ -218,7 +199,15 @@ npm run direct_load_trx
 
 ## 3.5 Run Services
 
-Choose between [5.1 Manual Start](#51-manual-start) or [5.2 Scripted Start](#52-scripted-start)
+To ensure your application starts on system boot, you can use PM2’s startup script generator. Run the following command and follow the instructions provided:
+
+```
+pm2 startup
+```
+
+##### 2.4.3 Set Up Log Rotation
+
+PM2 can also manage log rotation, which is critical for ensuring that logs do not consume all available disk space.
 
 ### 3.6 Manual Start
 
