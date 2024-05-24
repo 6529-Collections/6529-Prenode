@@ -20,6 +20,7 @@ async function directLoad() {
 
   const diff = start.diffFromNow().formatAsDuration();
   logger.info(`[DIRECT DB LOAD FOR TRANSACTIONS COMPLETE IN ${diff}]`);
+  process.exit(0);
 }
 
 async function runTransactions() {

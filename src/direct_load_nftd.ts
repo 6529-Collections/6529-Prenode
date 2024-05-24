@@ -14,6 +14,7 @@ async function directLoad() {
 
   const diff = start.diffFromNow().formatAsDuration();
   logger.info(`[DIRECT DB LOAD FOR NFTD COMPLETE IN ${diff}]`);
+  process.exit(0);
 }
 
 async function runDelegations(startBlock?: number) {
