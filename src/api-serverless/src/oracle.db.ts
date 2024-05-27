@@ -123,13 +123,19 @@ export const fetchTotalTDH = async () => {
     SELECT SUM(boosted_tdh) as total_tdh, SUM(boosted_memes_tdh) as memes_tdh, SUM(boosted_gradients_tdh) as gradients_tdh, SUM(boosted_nextgen_tdh) as nextgen_tdh from ${CONSOLIDATED_WALLETS_TDH_TABLE}
   `;
   const tdh = await sqlExecutor.execute(sql);
-  return {
+  const seasonTdh = await fetchSeasonsTDH();
+
+  const totals = {
     tdh: formatNumber(tdh[0]?.total_tdh ?? 0),
     memes_tdh: formatNumber(tdh[0]?.memes_tdh ?? 0),
     gradients_tdh: formatNumber(tdh[0]?.gradients_tdh ?? 0),
-    nextgen_tdh: formatNumber(tdh[0]?.nextgen_tdh ?? 0),
-    block
+    nextgen_tdh: formatNumber(tdh[0]?.nextgen_tdh ?? 0)
   };
+  seasonTdh.seasons.forEach((s) => {
+    totals[`memes_tdh_szn${s.season}`] = s.tdh;
+  });
+  totals['block'] = block;
+  return totals;
 };
 
 export const fetchNfts = async (contract?: string, id?: string) => {
