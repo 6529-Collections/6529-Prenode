@@ -125,7 +125,7 @@ export const fetchTotalTDH = async () => {
   const tdh = await sqlExecutor.execute(sql);
   const seasonTdh = await fetchSeasonsTDH();
 
-  const totals = {
+  const totals: any = {
     tdh: formatNumber(tdh[0]?.total_tdh ?? 0),
     memes_tdh: formatNumber(tdh[0]?.memes_tdh ?? 0),
     gradients_tdh: formatNumber(tdh[0]?.gradients_tdh ?? 0),
