@@ -1,36 +1,22 @@
 1. [Infrastructure](#1-infrastructure)
 
-2. [Setup](#2-setup)
+2. [AWS Setup](#2-aws-setup)
 
-   - 2.1 [Scripted Setup](#22-scripted-setup)
-   - 2.2 [Manual Setup](#21-manual-setup)
+3. [Manual Configuration](#3-manual-configuration)
 
-3. [Manual Configuration](#3-set-environment)
-
-4. [Initialize DB](#4-initialize-db)
-
-   - 4.1 [Restore Snapshot](#41-restore-snapshot)
-   - 4.2 [Direct Load](#42-direct-load)
-
-5. [Run Services](#5-run-services)
-
-   - 5.1 [Manual Start](#51-manual-start)
-   - 5.2 [Scripted Start](#52-scripted-start)
-
-6. [Updates](#6-updates)
-
-   - 6.1 [Manual Update](#61-manual-update)
-   - 6.2 [Scripted Update](#62-scripted-update)
-
-7. [OpenAPI Definition](https://6529-collections.github.io/6529-PreNode/docs)
+4. [Updates](#4-updates)
 
 ## 1. Infrastructure
 
-The 6529 PreNode is a service that provides a RESTful API for querying TDH data from the 6529 Collections smart contracts. It is the same logic used on seize.io, but provides a way to query data from the blockchain without needing to visit a web page.
+The 6529 Prenode is a service that provides a RESTful API for querying TDH data from the 6529 Collections smart contracts. It is the same logic used on seize.io, but provides a way to query data from the blockchain without needing to visit a centralized web page.
 
-To run the prenode, you'll need a database, a server configured with SSL, and a domain name.
+To run the prenode, you'll need a domain name, a database, a server configured with SSL, the open-source TDH code, and some configuration.
 
-Since the setup of all these things can be a little tricky, we've provided a CloudFormation script that will automate much of the setup process for you. This script will create an EC2 instance, an RDS instance, and a Route 53 domain, and configure them all to work together in a standalone VPC environment (and no, you don't need to know what all that means to get it going).
+Since the setup of all these things can be a little tricky, we've provided a CloudFormation script that will automate much of the setup process for you, directly in your own AWS account. This script will create the required EC2 instance, RDS instance, and a Route 53 domain, and configure them all to work together in a standalone VPC environment (and no, you don't need to know what all that means to get it going). All told, this configuration should run for less than $20 / month.
+
+If you want to run the Prenode in a diffrent context, you probably know what you are doing, and can use the automated scripts provided here to work out how to proceed.
+
+The Prenode endpoints are documented with OpenAPI Definitions, and published from the repo: [https://6529-collections.github.io/6529-Prenode/docs].
 
 ## 2. AWS Setup
 
@@ -38,21 +24,23 @@ You'll need just a few things in place before starting the automated setup proce
 
 **Prerequisites:**
 
-- You need an AWS account, and just a little familiarity with using the AWS console (<a href="https://aws.amazon.com/" target="_blank" rel="noopener noreferrer">Sign in now</a>) or the AWS CLI (<a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html" target="_blank" rel="noopener noreferrer">Read More</a>)
+- You need an AWS account, of course! If you don't have one, you can create one for free, but will be required to register a payment method. You'll also need just a little familiarity with using the AWS console (<a href="https://aws.amazon.com/" target="_blank" rel="noopener noreferrer">Sign in now</a>) or the AWS CLI (<a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html" target="_blank" rel="noopener noreferrer">Read More</a>)
 
-- Since the node is required to run over SSL, you'll need a domain name. The automated setup process will then get a free SSL cert for you.
+- Since the node is required to run securely over HTTPS, you'll need a domain name for an SSL certificate. The automated setup process will then get a free cert for you.
+
+- The Prenode is querying data directly from the blockchain, so you'll need an Alchemy API key. You can get one for free by visiting the <a href="https://docs.alchemy.com/docs/alchemy-quickstart-guide" target="_blank" rel="noopener noreferrer">Alchemy quick-start guide</a>.
 
 #### 2.1 Configure AWS CLI
 
 Sign in to your AWS account, create the IAM role you want to use, and generate a new Access Key.
 
-Set up your command line interface with this access key, secret access key, and your default region:
+Set up your command line interface with a profile that uses this access key, secret access key, and your default region:
 
 ```bash
 aws configure --profile 6529Prenode
 ```
 
-You can run this whenever you want to update any of these settings.
+You can run this again if you ever need to update any of these settings.
 
 #### 2.2 Generate a key pair
 
@@ -64,23 +52,29 @@ aws ec2 create-key-pair --key-name 6529PrenodeKey --query 'KeyMaterial' --output
 
 Your node will require SSL, and therefore a domain name. You will need to provide this domain name in the next step.
 
-The automated setup process will configure the domain name for you, if you have a domain registered in Route 53. 
+The automated CloudFormation setup process will configure the domain name for you, if you have a domain registered in Route 53.
 
-Before you proceed to the next step, go get a new domain name, or transfer an existing one to Route 53. You can do this by visiting the <a href="https://console.aws.amazon.com/route53/home" target="_blank" rel="noopener noreferrer">Route 53 console</a>.
+So, before you proceed to the next step, go get a new domain name, or transfer an existing one to Route 53. You can do this by visiting the <a href="https://console.aws.amazon.com/route53/home" target="_blank" rel="noopener noreferrer">Route 53 console</a>.
+
+In addition to the domain name, you will need the Hosted Zone ID for the domain. You can find this by selecting the domain, and copying the Hosted Zone ID from the right-hand side of the page.
 
 #### 2.4 Create the CloudFormation Stack
 
-Find an Ubuntu AMI ID for your region. You can find the AMI ID for your region by visiting the <a href="https://cloud-images.ubuntu.com/locator/ec2/" target="_blank" rel="noopener noreferrer">Ubuntu Cloud Image Locator</a>. Use the filters at the bottom of the table to select your preferred region, and the latest version of Ubuntu, and be sure it is `amd64` (arm AMI's don't run in the free tier).
+Find an Ubuntu AMI ID for your region you will deploy in. You can find the AMI ID for your region by visiting the <a href="https://cloud-images.ubuntu.com/locator/ec2/" target="_blank" rel="noopener noreferrer">Ubuntu Cloud Image Locator</a>. Use the filters at the bottom of the table to select your preferred region, and the latest version of Ubuntu, and be sure it is `amd64` (to work with the instance type the script uses).
 
-Set these values in your local environment to make calling the CloudFormation script easier. You'll just need them once, to get things going. Replace the `YOUR-*` values with what your stack should use:
+Set these values in your local environment to make calling the CloudFormation script easier. You'll only need them once, to fire off the CloudFormation script from your command line. Copy the below into a file (with updated values) and `source` it to set the values in your environment, or copy them one at a time (modifying the values) directly into your terminal.
+
+```bash
+
+Replace the `YOUR-*` values with what your stack should use:
 
 ```bash
 export PRENODE_DOMAIN=YOUR-DOMAIN-NAME;
+export PRENODE_HOSTED_ZONE_ID=YOUR-ROUTE53_HOSTED_ZONE_ID;
 export PRENODE_EMAIL=YOUR-EMAIL;
 export PRENODE_AMI_ID=YOUR-AMI-ID;
 export PRENODE_DB_PASSWORD=YOUR-MADEUP-SECURE-RDS-PASSWORD;
 export PRENODE_KEY_NAME=YOUR-AWS-SSH-KEY-NAME;
-export PRENODE_HOSTED_ZONE_ID=YOUR-ROUTE53_HOSTED_ZONE_ID;
 export ALCHEMY_API_KEY=YOUR-ALCHEMY-API-KEY;
 ```
 
@@ -100,11 +94,15 @@ aws cloudformation create-stack \
   --profile 6529Prenode
 ```
 
+Note: this command is expecting that you have properly set the environment variables in the previous step.
+
 Give it a few moments to create the stack. You can check the status of the stack by running:
 
 ```bash
 aws cloudformation describe-stacks --stack-name Prenode6529 --profile 6529Prenode
 ```
+
+### 2.5 Get the public IP address
 
 Once the stack is created, you can hold the public IP address of your EC2 instance in an env var by running:
 
@@ -112,35 +110,51 @@ Once the stack is created, you can hold the public IP address of your EC2 instan
 export PRENODE_IP=`aws cloudformation describe-stacks --stack-name Prenode6529 --query "Stacks[0].Outputs[?OutputKey=='ElasticIPAddress'].OutputValue" --output text --profile 6529Prenode`; echo $PRENODE_IP;
 ```
 
-Now you can SSH into your EC2 instance, if you want to do any manual configuration.:
+Now you can SSH into your EC2 instance, if you want to check the configuration:
 
 ```bash
 ssh -i ~/.ssh/6529PrenodeKey.pem ubuntu@$PRENODE_IP
 ```
 
+### 2.6 Verify
+
+Once the CloudFormation stack has completed building out all resources, verify it is working by navigating to the domain name you provided in the CloudFormation script:
+
+```
+https://YOUR.DOMAIN.NAME/api/tdh/0xADDRESS
+```
+
+Compare the response with
+
+```
+https://api.seize.io/api/tdh/0xADDRESS
+```
+
 ## 3. Manual configuration
 
-If you'd like to run the 6529 PreNode in any other context, you can manually configure it using the following steps.
+If you'd like to run the 6529 Prenode in any other context (Advanced), you can manually configure it using the following steps.
+
+DO NOT PROCEED if your AWS setup is complete.
 
 ### 3.1 Get the code
 
-Clone repository "6529-PreNode" at branch `main`
+Clone repository "6529-Prenode" at branch `main`
 
 ```
-git clone --branch main https://github.com/6529-Collections/6529-PreNode.git
+git clone --branch main https://github.com/6529-Collections/6529-Prenode.git
 ```
 
 then change directory to the repository
 
 ```bash
-cd 6529-PreNode/
+cd 6529-Prenode/
 ```
 
 ```bash
 scripts/setup.sh # Install dependencies, configure pm2, turn on log rotations
 ```
 
-To run the project you need a file to hold environment variable. If you need to do it manually, the following script with run you through the process of creating this file.
+To run the project you need a file to hold environment variable. The following script with run you through the process of creating this file.
 
 **Note:**
 
@@ -163,7 +177,7 @@ To run the project you need a file to hold environment variable. If you need to 
 npm run set_env
 ```
 
-<a href="https://github.com/6529-Collections/6529-PreNode/blob/main/.env.sample" target="_blank" rel="noopener noreferrer">Sample .env file</a>
+<a href="https://github.com/6529-Collections/6529-Prenode/blob/main/.env.sample" target="_blank" rel="noopener noreferrer">Sample .env file</a>
 
 ## 3.2 Initialize DB
 
@@ -205,13 +219,13 @@ To ensure your application starts on system boot, you can use PM2’s startup sc
 pm2 startup
 ```
 
-##### 2.4.3 Set Up Log Rotation
+## 3.6 Set Up Log Rotation
 
 PM2 can also manage log rotation, which is critical for ensuring that logs do not consume all available disk space.
 
-### 3.6 Manual Start
+### 3.7 Manual Start
 
-#### 3.6.1 Run Prenode
+#### 3.7.1 Run Prenode
 
 - PM2 process name: 6529Prenode
 
@@ -224,7 +238,7 @@ pm2 start npm --name=6529Prenode -- run prenode
 
 - **Note:** On start, this service will always run the tdh calculation on start and the schedule it to run at 00:00 UTC
 
-#### 3.6.2 Run API
+#### 3.7.2 Run API
 
 - PM2 process name: 6529Prenode-api
 - PORT: 3000
@@ -239,70 +253,70 @@ pm2 start npm --name=6529Prenode-api -- run api
 pm2 save
 ```
 
-### 3.7 Scripted Start
+### 3.8 Scripted Start
 
 ```
 scripts/start.sh
 ```
 
-## 4 Test
+### 3.9 Verify
 
-### 4.1 Local
+### 3.9.1 Local
 
 To test your api locally, navigate in your browser to:
 
 ```
-http://localhost:3000/api/tdh/<address>
+http://localhost:3000/api/tdh/0xADDRESS
 ```
 
-### 4.2 AWS
+### 3.9.1 Production
 
-If you are using AWS EC2, navigate to
+Once you have completed the steps on your production server, navigate to
 
 ```
-http://[ip-address]:3000/api/tdh/<address>
+https://YOUR-DOMAIN-NAME/api/tdh/0xADDRESS
 ```
-
-Note: Please make sure that you have added an inbound rule on the instance security group for port 3000
 
 Compare the response with
 
 ```
-https://api.seize.io/api/tdh/<address>
+https://api.seize.io/api/tdh/0xADDRESS
 ```
 
-## 5 Updates
+## 4 Updates
 
-Choose between [6.1 Manual Update](#61-manual-update) or [6.2 Scripted Update](#62-scripted-update)
+Get the latest Prenode source code by updating the repository.
 
-### 5.1 Manual Update
+Choose between [4.1 Manual Update](#41-manual-update) or [4.2 Scripted Update](#42-scripted-update)
 
-#### 5.1.1 Pull new changes
+### 4.1 Manual Update
+
+#### 4.1.1 Pull new changes
 
 ```
 git pull
 ```
 
-#### 5.1.2 Re-Install
+#### 4.1.2 Re-Install
 
 ```
 npm i
 ```
 
-#### 5.1.3 Re-Build
+#### 4.1.3 Re-Build
 
 ```
 npm run build
 ```
 
-#### 5.1.4 Restart Prenode and API
+#### 4.1.4 Restart Prenode and API
 
 ```
 pm2 restart 6529Prenode
 pm2 restart 6529Prenode-api
 ```
 
-### 5.2 Scripted Update
+### 4.2 Scripted Update
 
 ```
 scripts/update.sh
