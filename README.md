@@ -1,3 +1,7 @@
+# 6529 Prenode
+
+## Table of Contents
+
 1. [Infrastructure](#1-infrastructure)
 
 2. [AWS Setup](#2-aws-setup)
@@ -30,7 +34,7 @@ You'll need just a few things in place before starting the automated setup proce
 
 - The Prenode is querying data directly from the blockchain, so you'll need an Alchemy API key. You can get one for free by visiting the <a href="https://docs.alchemy.com/docs/alchemy-quickstart-guide" target="_blank" rel="noopener noreferrer">Alchemy quick-start guide</a>.
 
-#### 2.1 Configure AWS CLI
+### 2.1 Configure AWS CLI
 
 Sign in to your AWS account, create the IAM role you want to use, and generate a new Access Key.
 
@@ -42,13 +46,13 @@ aws configure --profile 6529Prenode
 
 You can run this again if you ever need to update any of these settings.
 
-#### 2.2 Generate a key pair
+### 2.2 Generate a key pair
 
 ```bash
 aws ec2 create-key-pair --key-name 6529PrenodeKey --query 'KeyMaterial' --output text > ~/.ssh/6529PrenodeKey.pem --profile 6529Prenode
 ```
 
-#### 2.3 Get a domain name
+### 2.3 Get a domain name
 
 Your node will require SSL, and therefore a domain name. You will need to provide this domain name in the next step.
 
@@ -58,7 +62,7 @@ So, before you proceed to the next step, go get a new domain name, or transfer a
 
 In addition to the domain name, you will need the Hosted Zone ID for the domain. You can find this by selecting the domain, and copying the Hosted Zone ID from the right-hand side of the page.
 
-#### 2.4 Create the CloudFormation Stack
+### 2.4 Create the CloudFormation Stack
 
 Find an Ubuntu AMI ID for your region you will deploy in. You can find the AMI ID for your region by visiting the <a href="https://cloud-images.ubuntu.com/locator/ec2/" target="_blank" rel="noopener noreferrer">Ubuntu Cloud Image Locator</a>. Use the filters at the bottom of the table to select your preferred region, and the latest version of Ubuntu, and be sure it is `amd64` (to work with the instance type the script uses).
 
@@ -120,13 +124,13 @@ ssh -i ~/.ssh/6529PrenodeKey.pem ubuntu@$PRENODE_IP
 
 Once the CloudFormation stack has completed building out all resources, verify it is working by navigating to the domain name you provided in the CloudFormation script:
 
-```
+```bash
 https://YOUR.DOMAIN.NAME/api/tdh/0xADDRESS
 ```
 
 Compare the response with
 
-```
+```bash
 https://api.seize.io/api/tdh/0xADDRESS
 ```
 
@@ -140,7 +144,7 @@ DO NOT PROCEED if your AWS setup is complete.
 
 Clone repository "6529-Prenode" at branch `main`
 
-```
+```bash
 git clone --branch main https://github.com/6529-Collections/6529-Prenode.git
 ```
 
@@ -173,7 +177,7 @@ To run the project you need a file to hold environment variable. The following s
   - database tables created (empty)
   - a new file will be created `.env.prenode`
 
-```
+```bash
 npm run set_env
 ```
 
@@ -187,7 +191,7 @@ The database expects some initial data. Choose to load either from latest snapsh
 
 Restore database from the latest snapshot using the following
 
-```
+```bash
 npm run restore
 ```
 
@@ -199,7 +203,7 @@ Two main components need to be loaded directly:
 
 Run the following to restore data from NFTDelegation contract
 
-```
+```bash
 npm run direct_load_nftd
 ```
 
@@ -207,7 +211,7 @@ npm run direct_load_nftd
 
 Run the following to restore transaction data
 
-```
+```bash
 npm run direct_load_trx
 ```
 
@@ -215,7 +219,7 @@ npm run direct_load_trx
 
 To ensure your application starts on system boot, you can use PM2’s startup script generator. Run the following command and follow the instructions provided:
 
-```
+```bash
 pm2 startup
 ```
 
@@ -229,7 +233,7 @@ PM2 can also manage log rotation, which is critical for ensuring that logs do no
 
 - PM2 process name: 6529Prenode
 
-```
+```bash
 pm2 start npm --name=6529Prenode -- run prenode
 ```
 
@@ -243,19 +247,19 @@ pm2 start npm --name=6529Prenode -- run prenode
 - PM2 process name: 6529Prenode-api
 - PORT: 3000
 
-```
+```bash
 pm2 start npm --name=6529Prenode-api -- run api
 ```
 
 **Note:** To ensure PM2 knows which processes to restart at boot, you need to save the list after starting the services
 
-```
+```bash
 pm2 save
 ```
 
 ### 3.8 Scripted Start
 
-```
+```bash
 scripts/start.sh
 ```
 
@@ -265,7 +269,7 @@ scripts/start.sh
 
 To test your api locally, navigate in your browser to:
 
-```
+```bash
 http://localhost:3000/api/tdh/0xADDRESS
 ```
 
@@ -273,13 +277,13 @@ http://localhost:3000/api/tdh/0xADDRESS
 
 Once you have completed the steps on your production server, navigate to
 
-```
+```bash
 https://YOUR-DOMAIN-NAME/api/tdh/0xADDRESS
 ```
 
 Compare the response with
 
-```
+```bash
 https://api.seize.io/api/tdh/0xADDRESS
 ```
 
@@ -293,31 +297,31 @@ Choose between [4.1 Manual Update](#41-manual-update) or [4.2 Scripted Update](#
 
 #### 4.1.1 Pull new changes
 
-```
+```bash
 git pull
 ```
 
 #### 4.1.2 Re-Install
 
-```
+```bash
 npm i
 ```
 
 #### 4.1.3 Re-Build
 
-```
+```bash
 npm run build
 ```
 
 #### 4.1.4 Restart Prenode and API
 
-```
+```bash
 pm2 restart 6529Prenode
 pm2 restart 6529Prenode-api
 ```
 
 ### 4.2 Scripted Update
 
-```
+```bash
 scripts/update.sh
 ```
