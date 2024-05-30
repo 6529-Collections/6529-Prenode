@@ -56,7 +56,7 @@ export const fetchSingleAddressTDH = async (address: string) => {
   const { block, tdh } = await fetchBlockAndAddressTdh(address);
   const boost = tdh[0]?.boost ?? 1;
   const seasonTdh = await fetchSingleAddressTDHMemesSeasons(address);
-  const addressTdh = {
+  const addressTdh: any = {
     tdh: formatNumber(tdh[0]?.boosted_tdh ?? 0),
     boost,
     memes_tdh: formatNumber(tdh[0]?.boosted_memes_tdh ?? 0),
