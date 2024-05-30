@@ -68,7 +68,7 @@ Find an Ubuntu AMI ID for your region you will deploy in. You can find the AMI I
 
 Set these values in your local environment to make calling the CloudFormation script easier. You'll only need them once, to fire off the CloudFormation script from your command line. Copy the below into a file (with updated values) and `source` it to set the values in your environment, or copy them one at a time (modifying the values) directly into your terminal.
 
-```bash
+````bash
 
 Replace the `YOUR-*` values with what your stack should use:
 
@@ -80,7 +80,7 @@ export PRENODE_AMI_ID=YOUR-AMI-ID;
 export PRENODE_DB_PASSWORD=YOUR-MADEUP-SECURE-RDS-PASSWORD;
 export PRENODE_KEY_NAME=YOUR-AWS-SSH-KEY-NAME;
 export ALCHEMY_API_KEY=YOUR-ALCHEMY-API-KEY;
-```
+````
 
 Run the following command to create the CloudFormation stack:
 
@@ -125,13 +125,13 @@ ssh -i ~/.ssh/6529PrenodeKey.pem ubuntu@$PRENODE_IP
 Once the CloudFormation stack has completed building out all resources, verify it is working by navigating to the domain name you provided in the CloudFormation script:
 
 ```bash
-https://YOUR.DOMAIN.NAME/api/tdh/0xADDRESS
+https://YOUR.DOMAIN.NAME/oracle/address/0xADDRESS
 ```
 
 Compare the response with
 
 ```bash
-https://api.seize.io/api/tdh/0xADDRESS
+https://api.seize.io/oracle/address/0xADDRESS
 ```
 
 ## 3. Manual configuration
@@ -185,21 +185,25 @@ npm run set_env
 
 ## 3.2 Initialize DB
 
-The database expects some initial data. Choose to load either from latest snapshot or directly
+The database expects some initial data. Choose to load EITHER from latest snapshot or directly.
 
-## 3.3 Restore Snapshot
+## 3.2.1 Restore Snapshot
 
-Restore database from the latest snapshot using the following
+The best option is usually to restore a recent seize.io snapshot.
+
+Populate your prenode database from the latest snapshot using the following
 
 ```bash
 npm run restore
 ```
 
-## 3.4 Direct Load
+## 3.2.2 Direct Load
 
-Two main components need to be loaded directly:
+DO NOT PROCEED if you have already restored from a snapshot. No need, you've got the data.
 
-### 3.4.1 NFTDelegation
+If you'd like to load data directly from the chain, you can do so by following the steps below.
+
+Two main components need to be loaded directly: NFTDelegation data and Transaction data.
 
 Run the following to restore data from NFTDelegation contract
 
@@ -207,15 +211,13 @@ Run the following to restore data from NFTDelegation contract
 npm run direct_load_nftd
 ```
 
-### 3.4.2 Transactions
-
 Run the following to restore transaction data
 
 ```bash
 npm run direct_load_trx
 ```
 
-## 3.5 Run Services
+## 3.3 Run Services
 
 To ensure your application starts on system boot, you can use PM2’s startup script generator. Run the following command and follow the instructions provided:
 
@@ -223,13 +225,13 @@ To ensure your application starts on system boot, you can use PM2’s startup sc
 pm2 startup
 ```
 
-## 3.6 Set Up Log Rotation
+## 3.4 Set Up Log Rotation
 
 PM2 can also manage log rotation, which is critical for ensuring that logs do not consume all available disk space.
 
-### 3.7 Manual Start
+### 3.5 Manual Start
 
-#### 3.7.1 Run Prenode
+#### 3.5.1 Run Prenode
 
 - PM2 process name: 6529Prenode
 
@@ -242,7 +244,7 @@ pm2 start npm --name=6529Prenode -- run prenode
 
 - **Note:** On start, this service will always run the tdh calculation on start and the schedule it to run at 00:00 UTC
 
-#### 3.7.2 Run API
+#### 3.5.2 Run API
 
 - PM2 process name: 6529Prenode-api
 - PORT: 3000
@@ -257,34 +259,53 @@ pm2 start npm --name=6529Prenode-api -- run api
 pm2 save
 ```
 
-### 3.8 Scripted Start
+### 3.6 Scripted Start
 
 ```bash
 scripts/start.sh
 ```
 
-### 3.9 Verify
+### 3.7 Verify
 
-### 3.9.1 Local
+### 3.7.1 Local
 
 To test your api locally, navigate in your browser to:
 
 ```bash
-http://localhost:3000/api/tdh/0xADDRESS
+http://localhost:3000/oracle/address/0xADDRESS
 ```
 
-### 3.9.1 Production
+### 3.7.2 Production
 
-Once you have completed the steps on your production server, navigate to
+Once you have completed the above steps on your production server, you'll also need to ensure that your domain is pointing to the server's IP address, and is correctly configured for SSL.
+
+SSL traffic on port 443 will need be routed to port 3000 to reach the API server. Use the approach appropriate for your server to configure this.
+
+Config for nginx might look like:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name YOUR-DOMAIN-NAME;
+
+   #... SSL configuration
+
+   location / {
+      proxy_pass http://localhost:3000;
+   }
+}
+```
+
+When this is all working, you can finaly navigate to
 
 ```bash
-https://YOUR-DOMAIN-NAME/api/tdh/0xADDRESS
+https://YOUR-DOMAIN-NAME/oracle/address/0xADDRESS
 ```
 
 Compare the response with
 
 ```bash
-https://api.seize.io/api/tdh/0xADDRESS
+https://api.seize.io/oracle/address/0xADDRESS
 ```
 
 ## 4 Updates
