@@ -14,7 +14,7 @@ router.use(
   SwaggerUI.setup(
     swaggerDocument,
     {
-      customSiteTitle: '6529-PreNode API Docs',
+      customSiteTitle: '6529-Prenode API Docs',
       customCss: '.topbar { display: none }'
     },
     { explorer: true }
