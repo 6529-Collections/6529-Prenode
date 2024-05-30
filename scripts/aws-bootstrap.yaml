@@ -17,7 +17,7 @@ Parameters:
   MasterUserPassword:
     Type: String
     NoEcho: true
-    Description: Master password for the RDS instance.
+    Description: Master password for the RDS instance - should be very long and random.
   KeyName:
     Type: AWS::EC2::KeyPair::KeyName
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance.
@@ -134,7 +134,7 @@ Resources:
       Engine: mysql
       MasterUsername: admin
       MasterUserPassword: !Ref MasterUserPassword
-      DBName: PrenodeDatabase
+      DBName: tdhprenode
       VPCSecurityGroups: [!Ref PrenodeRDSSecurityGroup]
       DBSubnetGroupName: !Ref PrenodeDBSubnetGroup
 
@@ -165,6 +165,21 @@ Resources:
         Fn::Base64: !Sub |
           #!/bin/bash
           apt-get update
+          apt-get install -y mysql-client
+
+          # Wait for the RDS instance to be available
+          RDS_ENDPOINT=${PrenodeDatabase.Endpoint.Address}
+          MASTER_PASSWORD=${MasterUserPassword}
+          HALF_LENGTH=$((${#MASTER_PASSWORD} / 2))
+          USER_PASSWORD=${MASTER_PASSWORD:0:$HALF_LENGTH}
+
+          # Create the database, write-enabled user, and read-only user
+          mysql -h $RDS_ENDPOINT -u admin -p${MasterUserPassword} -e "CREATE DATABASE IF NOT EXISTS ${DBName};"
+          mysql -h $RDS_ENDPOINT -u admin -p${MasterUserPassword} -e "CREATE USER IF NOT EXISTS 'prenodeuser'@'%' IDENTIFIED WITH 'mysql_native_password' BY '${USER_PASSWORD}';"
+          mysql -h $RDS_ENDPOINT -u admin -p${MasterUserPassword} -e "GRANT ALL PRIVILEGES ON ${DBName}.* TO 'prenodeuser'@'%';"
+          mysql -h $RDS_ENDPOINT -u admin -p${MasterUserPassword} -e "CREATE USER IF NOT EXISTS 'prenodeuser-read'@'%' IDENTIFIED WITH 'mysql_native_password' BY '${USER_PASSWORD}-read';"
+          mysql -h $RDS_ENDPOINT -u admin -p${MasterUserPassword} -e "GRANT SELECT ON ${DBName}.* TO 'prenodeuser-read'@'%';"
+      
           apt-get install -y nginx python3-pip certbot python3-certbot-nginx
           systemctl start nginx
           certbot --non-interactive --nginx --redirect -d ${DomainName} --agree-tos -m ${AdminEmail}
@@ -196,24 +211,21 @@ Resources:
           systemctl reload nginx
           su -l ubuntu -c "
             cd ~
-            git clone --branch cf-setup https://github.com/6529-Collections/6529-PreNode.git 
-            cd 6529-PreNode
+            git clone --branch cf-setup https://github.com/6529-Collections/6529-Prenode.git 
+            cd 6529-Prenode
             echo '
             DB_HOST=${PrenodeDatabase.Endpoint.Address}
             DB_PORT=3306
-            DB_ADMIN=admin
-            DB_ADMIN_PASS=${MasterUserPassword}
-            DB_NAME=tdhprenode
-            DB_USER=tdhuser
-            DB_PASS=${MasterUserPassword}
+            DB_NAME=${DBName}
+            DB_USER=prenodeuser
+            DB_PASS=${USER_PASSWORD}
             DB_HOST_READ=${PrenodeDatabase.Endpoint.Address}
-            DB_USER_READ=tdhuser-read
-            DB_PASS_READ=${MasterUserPassword}
+            DB_USER_READ=prenodeuser-read
+            DB_PASS_READ=${USER_PASSWORD}-read
             ALCHEMY_API_KEY=${AlchemyAPIKey}
             ' > .env.prenode
             bash scripts/setup.sh
             sudo env PATH=$PATH:/usr/local/bin /usr/local/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
-            npm run set_env # Configure the env and prep the database
             npm run restore # Restore database from the latest snapshot
             bash scripts/start.sh # Start the server with pm2
           "
