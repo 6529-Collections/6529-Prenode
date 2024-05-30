@@ -4,7 +4,7 @@ Description: A template to deploy an EC2 instance with an Elastic IP, NGINX, Let
 Parameters:
   DomainName:
     Type: String
-    Description: Fully-qualified domain name to link to the SSL certificate, e.g., 6529node.yercooldomain.wtf
+    Description: Fully-qualified domain name to link to the SSL certificate, e.g., 6529prenode.yercooldomain.wtf
   HostedZoneId:
     Type: String
     Description: The ID of the existing Route 53 hosted zone.
@@ -24,6 +24,10 @@ Parameters:
   AlchemyAPIKey:
     Type: String
     Description: API key for accessing the Alchemy service.
+  RepoBranch:
+    Type: String
+    Description: Use the default, unless you are testing a different branch.
+    Default: main
 
 Resources:
   PrenodeDNSRecord:
@@ -211,7 +215,7 @@ Resources:
           systemctl reload nginx
           su -l ubuntu -c "
             cd ~
-            git clone --branch cf-setup https://github.com/6529-Collections/6529-Prenode.git 
+            git clone --branch ${RepoBranch} https://github.com/6529-Collections/6529-Prenode.git 
             cd 6529-Prenode
             echo '
             DB_HOST=${PrenodeDatabase.Endpoint.Address}
