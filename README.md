@@ -34,6 +34,18 @@ You'll need just a few things in place before starting the automated setup proce
 
 - The Prenode is querying data directly from the blockchain, so you'll need an Alchemy API key. You can get one for free by visiting the <a href="https://docs.alchemy.com/docs/alchemy-quickstart-guide" target="_blank" rel="noopener noreferrer">Alchemy quick-start guide</a>.
 
+To get started, clone this repository in your terminal:
+
+```bash
+git clone --branch main https://github.com/6529-Collections/6529-Prenode.git
+```
+
+then change directory to the repository:
+
+```bash
+cd 6529-Prenode/
+```
+
 ### 2.1 Configure AWS CLI
 
 Sign in to your AWS account, create the IAM role you want to use, and generate a new Access Key.
@@ -66,9 +78,11 @@ In addition to the domain name, you will need the Hosted Zone ID for the domain.
 
 Find an Ubuntu AMI ID for your region you will deploy in. You can find the AMI ID for your region by visiting the <a href="https://cloud-images.ubuntu.com/locator/ec2/" target="_blank" rel="noopener noreferrer">Ubuntu Cloud Image Locator</a>. Use the filters at the bottom of the table to select your preferred region, and the latest version of Ubuntu, and be sure it is `amd64` (to work with the instance type the script uses).
 
-Set these values in your local environment to make calling the CloudFormation script easier. You'll only need them once, to fire off the CloudFormation script from your command line. Copy the below into a file (with updated values) and `source` it to set the values in your environment, or copy them one at a time (modifying the values) directly into your terminal.
+If you are familiar with the AWS web-based console, you can build the stack by visiting the <a href="https://console.aws.amazon.com/cloudformation/home" target="_blank" rel="noopener noreferrer">CloudFormation console</a>, and uploading the script `./scripts/aws-bootstrap.yaml`.
 
-````bash
+Or, you can run the following commands to create the stack and verify it from your command line.
+
+Set these values in your local environment to make calling the CloudFormation script easier. You'll only need them once, to fire off the CloudFormation script from your command line. Copy the below into a file (with updated values) and `source` it to set the values in your environment, or copy them one at a time (modifying the values) directly into your terminal.
 
 Replace the `YOUR-*` values with what your stack should use:
 
@@ -100,7 +114,9 @@ aws cloudformation create-stack \
 
 Note: this command is expecting that you have properly set the environment variables in the previous step.
 
-Give it a few moments to create the stack. You can check the status of the stack by running:
+Give it a few moments to create the stack. And you are basically done! The next steps here are just to verify that everything is working as expected.
+
+That's You can check the status of the stack by running:
 
 ```bash
 aws cloudformation describe-stacks --stack-name Prenode6529 --profile 6529Prenode
@@ -119,6 +135,10 @@ Now you can SSH into your EC2 instance, if you want to check the configuration:
 ```bash
 ssh -i ~/.ssh/6529PrenodeKey.pem ubuntu@$PRENODE_IP
 ```
+
+Source code can be found in `~/6529-Prenode`. You can find logs in `~/.pm2/logs`.
+
+```bash
 
 ### 2.6 Verify
 
