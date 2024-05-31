@@ -28,11 +28,11 @@ You'll need just a few things in place before starting the automated setup proce
 
 **Prerequisites:**
 
-- You need an AWS account, of course! If you don't have one, you can create one for free, but will be required to register a payment method. You'll also need just a little familiarity with using the AWS console (<a href="https://aws.amazon.com/" target="_blank" rel="noopener noreferrer">Sign in now</a>) or the AWS CLI (<a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html" target="_blank" rel="noopener noreferrer">Read More</a>)
+- You need an AWS account, of course! If you don't have one, you can create one for free, but will be required to register a payment method. You'll also need just a little familiarity with using the AWS console (<a href="https://aws.amazon.com/" target="_blank" rel="noreferrer">Sign in now</a>) or the AWS CLI (<a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html" target="_blank" rel="noreferrer">Read More</a>)
 
 - Since the node is required to run securely over HTTPS, you'll need a domain name for an SSL certificate. The automated setup process will then get a free cert for you.
 
-- The Prenode is querying data directly from the blockchain, so you'll need an Alchemy API key. You can get one for free by visiting the <a href="https://docs.alchemy.com/docs/alchemy-quickstart-guide" target="_blank" rel="noopener noreferrer">Alchemy quick-start guide</a>.
+- The Prenode is querying data directly from the blockchain, so you'll need an Alchemy API key. You can get one for free by visiting the <a href="https://docs.alchemy.com/docs/alchemy-quickstart-guide" target="_blank" rel="noreferrer">Alchemy quick-start guide</a>.
 
 ### 2.1 Configure AWS CLI
 
@@ -58,15 +58,15 @@ Your node will require SSL, and therefore a domain name. You will need to provid
 
 The automated CloudFormation setup process will configure the domain name for you, if you have a domain registered in Route 53.
 
-So, before you proceed to the next step, go get a new domain name, or transfer an existing one to Route 53. You can do this by visiting the <a href="https://console.aws.amazon.com/route53/home" target="_blank" rel="noopener noreferrer">Route 53 console</a>.
+So, before you proceed to the next step, go get a new domain name, or transfer an existing one to Route 53. You can do this by visiting the <a href="https://console.aws.amazon.com/route53/home" target="_blank" rel="noreferrer">Route 53 console</a>.
 
 In addition to the domain name, you will need the Hosted Zone ID for the domain. You can find this by selecting the domain, and copying the Hosted Zone ID from the right-hand side of the page.
 
 ### 2.4 Create the CloudFormation Stack
 
-Find an Ubuntu AMI ID for your region you will deploy in. You can find the AMI ID for your region by visiting the <a href="https://cloud-images.ubuntu.com/locator/ec2/" target="_blank" rel="noopener noreferrer">Ubuntu Cloud Image Locator</a>. Use the filters at the bottom of the table to select your preferred region, and the latest version of Ubuntu, and be sure it is `amd64` (to work with the instance type the script uses).
+Find an Ubuntu AMI ID for your region you will deploy in. You can find the AMI ID for your region by visiting the <a href="https://cloud-images.ubuntu.com/locator/ec2/" target="_blank" rel="noreferrer">Ubuntu Cloud Image Locator</a>. Use the filters at the bottom of the table to select your preferred region, and the latest version of Ubuntu, and be sure it is `amd64` (to work with the instance type the script uses).
 
-If you are familiar with the AWS web-based console, you can build the stack by visiting the <a href="https://console.aws.amazon.com/cloudformation/home" target="_blank" rel="noopener noreferrer">CloudFormation console</a>, and uploading the script `./scripts/aws-bootstrap.yaml`.
+If you are familiar with the AWS web-based console, you can build the stack by visiting the <a href="https://console.aws.amazon.com/cloudformation/home" target="_blank" rel="noreferrer">CloudFormation console</a>, and uploading the script `./scripts/aws-bootstrap.yaml`.
 
 Or, you can run the following commands to create the stack and verify it from your command line.
 
@@ -175,7 +175,7 @@ To run the project you need a file to hold environment variable. The following s
   - admin user and password (used to create database and new users for the services but not saved in .env file)
   - new database user/password
 
-- you will be asked to provide Alchemy API key (get one <a href="https://docs.alchemy.com/docs/alchemy-quickstart-guide" target="_blank" rel="noopener noreferrer">here</a>)
+- you will be asked to provide Alchemy API key (get one <a href="https://docs.alchemy.com/docs/alchemy-quickstart-guide" target="_blank" rel="noreferrer">here</a>)
 
 - at the end of this process:
   - new database created
@@ -187,7 +187,7 @@ To run the project you need a file to hold environment variable. The following s
 npm run set_env
 ```
 
-<a href="https://github.com/6529-Collections/6529-Prenode/blob/main/.env.sample" target="_blank" rel="noopener noreferrer">Sample .env file</a>
+<a href="https://github.com/6529-Collections/6529-Prenode/blob/main/.env.sample" target="_blank" rel="noreferrer">Sample .env file</a>
 
 ## 3.2 Initialize DB
 
