@@ -34,18 +34,6 @@ You'll need just a few things in place before starting the automated setup proce
 
 - The Prenode is querying data directly from the blockchain, so you'll need an Alchemy API key. You can get one for free by visiting the <a href="https://docs.alchemy.com/docs/alchemy-quickstart-guide" target="_blank" rel="noopener noreferrer">Alchemy quick-start guide</a>.
 
-To get started, clone this repository in your terminal:
-
-```bash
-git clone --branch main https://github.com/6529-Collections/6529-Prenode.git
-```
-
-then change directory to the repository:
-
-```bash
-cd 6529-Prenode/
-```
-
 ### 2.1 Configure AWS CLI
 
 Sign in to your AWS account, create the IAM role you want to use, and generate a new Access Key.
@@ -94,14 +82,14 @@ export PRENODE_AMI_ID=YOUR-AMI-ID;
 export PRENODE_DB_PASSWORD=YOUR-MADEUP-SECURE-RDS-PASSWORD;
 export PRENODE_KEY_NAME=YOUR-AWS-SSH-KEY-NAME;
 export ALCHEMY_API_KEY=YOUR-ALCHEMY-API-KEY;
-````
+```
 
 Run the following command to create the CloudFormation stack:
 
 ```bash
 aws cloudformation create-stack \
   --stack-name Prenode6529 \
-  --template-body file://./scripts/aws-bootstrap.yaml \
+  --template-body "$(curl -L https://raw.githubusercontent.com/6529-Collections/6529-Prenode/HEAD/scripts/aws-bootstrap.yaml)" \
   --parameters ParameterKey=DomainName,ParameterValue=$PRENODE_DOMAIN \
                ParameterKey=AdminEmail,ParameterValue=$PRENODE_EMAIL \
                ParameterKey=AMIId,ParameterValue=$PRENODE_AMI_ID \
@@ -137,8 +125,6 @@ ssh -i ~/.ssh/6529PrenodeKey.pem ubuntu@$PRENODE_IP
 ```
 
 Source code can be found in `~/6529-Prenode`. You can find logs in `~/.pm2/logs`.
-
-```bash
 
 ### 2.6 Verify
 
