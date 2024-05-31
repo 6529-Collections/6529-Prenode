@@ -2,14 +2,14 @@
 
 # Function to check if script has changed
 check_script_update() {
-    local SCRIPT_HASH_BEFORE=$1
-    local SCRIPT_HASH_AFTER=$(md5sum $0 | awk '{ print $1 }')
+  local SCRIPT_HASH_BEFORE=$1
+  local SCRIPT_HASH_AFTER=$(md5sum $0 | awk '{ print $1 }')
 
-    if [ "$SCRIPT_HASH_BEFORE" != "$SCRIPT_HASH_AFTER" ]; then
-        echo "Script update detected. Re-executing the updated script."
-        exec $0
-        exit 0
-    fi
+  if [ "$SCRIPT_HASH_BEFORE" != "$SCRIPT_HASH_AFTER" ]; then
+      echo "Update script modified. Re-executing the updated script."
+      exec $0
+      exit 0
+  fi
 }
 
 # Exit immediately if a command exits with a non-zero status
