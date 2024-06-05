@@ -1,0 +1,52 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+      {
+          "Effect": "Allow",
+          "Action": [
+              "ec2:AllocateAddress",
+              "ec2:AssociateAddress",
+              "ec2:AttachInternetGateway",
+              "ec2:AuthorizeSecurityGroupIngress",
+              "ec2:CreateInternetGateway",
+              "ec2:CreateRoute",
+              "ec2:CreateRouteTable",
+              "ec2:CreateSecurityGroup",
+              "ec2:CreateSubnet",
+              "ec2:CreateTags",
+              "ec2:CreateVpc",
+              "ec2:DeleteSecurityGroup",
+              "ec2:DeleteSubnet",
+              "ec2:DeleteVpc",
+              "ec2:Describe*",
+              "ec2:DisassociateAddress",
+              "ec2:ModifyVpcAttribute",
+              "ec2:ReleaseAddress",
+              "ec2:RunInstances",
+              "ec2:TerminateInstances",
+              "ec2:DeleteRouteTable",
+              "ec2:DetachInternetGateway",
+              "ec2:DeleteInternetGateway",
+              "ec2:RevokeSecurityGroupIngress",
+              "ec2:DeleteRoute",
+              "rds:CreateDBInstance",
+              "rds:CreateDBSubnetGroup",
+              "rds:DeleteDBInstance",
+              "rds:DeleteDBSubnetGroup",
+              "rds:Describe*",
+              "cloudformation:DescribeStacks",
+              "cloudformation:CreateStack",
+              "cloudformation:UpdateStack",
+              "cloudformation:DeleteStack",
+              "cloudformation:DescribeStackResources",
+              "cloudformation:ListStackResources"
+          ],
+          "Resource": "*"
+      },
+      {
+          "Effect": "Allow",
+          "Action": "iam:PassRole",
+          "Resource": "arn:aws:iam::<your-account-id>:role/<specific-role-name>"
+      }
+  ]
+}

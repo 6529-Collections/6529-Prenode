@@ -36,7 +36,12 @@ You'll need just a few things in place before starting the automated setup proce
 
 ### 2.1 Configure AWS CLI
 
-Sign in to your AWS account, create the IAM role you want to use, and generate a new Access Key.
+Sign in to your AWS account. 
+
+1. Create the IAM user you want to use, initially with no access policies attached.
+1. Add a new IAM policy along the lines of the provided [IAM policy example](scripts/prenode-iam-policy-example.json), making sure you scope it your new user properly.
+1. Attach this policy to the user you created.
+1. Now view the user's Security Credentials and generate a new Access Key.
 
 Set up your command line interface with a profile that uses this access key, secret access key, and your default region:
 
