@@ -7,10 +7,7 @@
                 "ec2:*",
                 "rds:*",
                 "cloudformation:*",
-                "route53:GetHostedZone",
-                "route53:ListHostedZones",
-                "route53:ChangeResourceRecordSets",
-                "route53:ListResourceRecordSets"
+                "route53:*"
             ],
             "Resource": "*"
         },
