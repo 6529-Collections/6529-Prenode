@@ -22,13 +22,13 @@ If you want to run the Prenode in a diffrent context, you probably know what you
 
 The Prenode endpoints are documented with OpenAPI Definitions, and published from the repo: [https://6529-collections.github.io/6529-Prenode/docs].
 
-## 2. AWS Setup
+## 2. AWS setup
 
 You'll need just a few things in place before starting the automated setup process.
 
 **Prerequisites:**
 
-- You need an AWS account, of course! If you don't have one, you can create one for free, but will be required to register a payment method. You'll also need just a little familiarity with using the AWS console (<a href="https://aws.amazon.com/" target="_blank" rel="noreferrer">Sign in now</a>) or the AWS CLI (<a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html" target="_blank" rel="noreferrer">Read More</a>)
+- You need an AWS account, of course! If you don't have one, you can create one for free (but will be required to register a payment method). You'll also need just a little familiarity with using the AWS console (<a href="https://aws.amazon.com/" target="_blank" rel="noreferrer">Sign in now</a>) or the AWS CLI (<a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html" target="_blank" rel="noreferrer">Read More</a>)
 
 - Since the node is required to run securely over HTTPS, you'll need a domain name for an SSL certificate. The automated setup process will then get a free cert for you.
 
@@ -36,12 +36,13 @@ You'll need just a few things in place before starting the automated setup proce
 
 ### 2.1 Configure AWS CLI
 
-Sign in to your AWS account. 
+Sign in to your AWS account.
 
-1. Create the IAM user you want to use, initially with no access policies attached.
-1. Add a new IAM policy along the lines of the provided [IAM policy example](scripts/prenode-iam-policy-example.json), making sure you scope it your new user properly.
-1. Attach this policy to the user you created.
-1. Now view the user's Security Credentials and generate a new Access Key.
+1. Select (or create) the IAM user you want to use, initially with no access policies attached. Note the ARN of this user.
+1. Add a new IAM policy along the lines of the provided [IAM policy example](scripts/prenode-iam-policy-example.json), making sure you scope it your new user's ARN properly.
+1. 'Add permission' to attach this policy to the user.
+   > NOTE: This policy grants the user full access to a number of resources. Be SURE to remove the policy when done, so the user account can't be exploited.
+1. Now view the user's Security Credentials and generate a new Access Key for CLI usage.
 
 Set up your command line interface with a profile that uses this access key, secret access key, and your default region:
 
@@ -53,8 +54,16 @@ You can run this again if you ever need to update any of these settings.
 
 ### 2.2 Generate a key pair
 
+To connect to the EC2 instance, you'll need to generate a key pair. As you will use this later, you can store the name of the key in an environment variable.
+
+You can do this by running the following commands:
+
 ```bash
-aws ec2 create-key-pair --key-name 6529PrenodeKey --query 'KeyMaterial' --output text > ~/.ssh/6529PrenodeKey.pem --profile 6529Prenode
+export PRENODE_EC2_KEY_PAIR_NAME=PrenodeEC2KeyPairName
+aws ec2 create-key-pair --key-name $PRENODE_EC2_KEY_PAIR_NAME \
+  --output text > ~/.ssh/$PRENODE_EC2_KEY_PAIR_NAME.pem \
+  --query 'KeyMaterial' \
+  --profile 6529Prenode
 ```
 
 ### 2.3 Get a domain name
@@ -67,27 +76,26 @@ So, before you proceed to the next step, go get a new domain name, or transfer a
 
 In addition to the domain name, you will need the Hosted Zone ID for the domain. You can find this by selecting the domain, and copying the Hosted Zone ID from the right-hand side of the page.
 
-### 2.4 Create the CloudFormation Stack
+### 2.4 Create the CloudFormation stack
 
-Find an Ubuntu AMI ID for your region you will deploy in. You can find the AMI ID for your region by visiting the <a href="https://cloud-images.ubuntu.com/locator/ec2/" target="_blank" rel="noreferrer">Ubuntu Cloud Image Locator</a>. Use the filters at the bottom of the table to select your preferred region, and the latest version of Ubuntu, and be sure it is `amd64` (to work with the instance type the script uses).
+Find an Ubuntu AMI ID for your region you will deploy in. You can find the AMI ID for your region by visiting the <a href="https://cloud-images.ubuntu.com/locator/ec2/" target="_blank" rel="noreferrer">Ubuntu Cloud Image Locator</a>. Use the filters at the bottom of the table to select your preferred region, and the latest version of Ubuntu, and be sure it is `amd64` (to work with the instance type the script uses). That should narrow it down to a single option.
 
 If you are familiar with the AWS web-based console, you can build the stack by visiting the <a href="https://console.aws.amazon.com/cloudformation/home" target="_blank" rel="noreferrer">CloudFormation console</a>, and uploading the script `./scripts/aws-bootstrap.yaml`.
 
-Or, you can run the following commands to create the stack and verify it from your command line.
+Or, you can run the commands below to create the stack and verify it from your command line.
 
-Set these values in your local environment to make calling the CloudFormation script easier. You'll only need them once, to fire off the CloudFormation script from your command line. Copy the below into a file (with updated values) and `source` it to set the values in your environment, or copy them one at a time (modifying the values) directly into your terminal.
+Set these values in your local environment (in addition to PRENODE_EC2_KEY_PAIR_NAME, which was done above) to make calling the CloudFormation script easier. You'll only need them once, to fire off the CloudFormation script from your command line. Copy the below into your CLI one at a time (with updated values) to save the values temporarily in your environment (until you close the CLI).
 
 Replace the `YOUR-*` values with what your stack should use:
 
-```bash
-export PRENODE_DOMAIN=YOUR-DOMAIN-NAME;
-export PRENODE_HOSTED_ZONE_ID=YOUR-ROUTE53_HOSTED_ZONE_ID;
-export PRENODE_EMAIL=YOUR-EMAIL;
-export PRENODE_AMI_ID=YOUR-AMI-ID;
-export PRENODE_DB_PASSWORD=YOUR-MADEUP-SECURE-RDS-PASSWORD;
-export PRENODE_KEY_NAME=YOUR-AWS-SSH-KEY-NAME;
-export ALCHEMY_API_KEY=YOUR-ALCHEMY-API-KEY;
-```
+`export PRENODE_DOMAIN=your-domain-name`
+`export PRENODE_HOSTED_ZONE_ID=your-route53_hosted_zone_id`
+`export PRENODE_EMAIL=your-email`
+`export PRENODE_AMI_ID=your-ami-id`
+`export PRENODE_DB_PASSWORD=your-long-db-password-less-than-40-chars`
+`export ALCHEMY_API_KEY=your-alchemy-api-key`
+
+To keep any of these around for future terminal sessions, you can add them to your shell profile (e.g. `~/.bashrc`).
 
 Run the following command to create the CloudFormation stack:
 
@@ -99,7 +107,7 @@ aws cloudformation create-stack \
                ParameterKey=AdminEmail,ParameterValue=$PRENODE_EMAIL \
                ParameterKey=AMIId,ParameterValue=$PRENODE_AMI_ID \
                ParameterKey=MasterUserPassword,ParameterValue=$PRENODE_DB_PASSWORD \
-               ParameterKey=KeyName,ParameterValue=$PRENODE_KEY_NAME \
+               ParameterKey=KeyName,ParameterValue=$PRENODE_EC2_KEY_PAIR_NAME \
                ParameterKey=HostedZoneId,ParameterValue=$PRENODE_HOSTED_ZONE_ID \
                ParameterKey=AlchemyAPIKey,ParameterValue=$ALCHEMY_API_KEY \
   --profile 6529Prenode
@@ -107,9 +115,11 @@ aws cloudformation create-stack \
 
 Note: this command is expecting that you have properly set the environment variables in the previous step.
 
-Give it a few moments to create the stack. And you are basically done! The next steps here are just to verify that everything is working as expected.
+And you are basically done!
 
-That's You can check the status of the stack by running:
+Give it a few moments (it might take 10 minutes or more) to create the stack. The next steps here are just to verify that everything is working as expected.
+
+That's You can check the status of the stack from the AWS console, or by running:
 
 ```bash
 aws cloudformation describe-stacks --stack-name Prenode6529 --profile 6529Prenode
@@ -126,7 +136,7 @@ export PRENODE_IP=`aws cloudformation describe-stacks --stack-name Prenode6529 -
 Now you can SSH into your EC2 instance, if you want to check the configuration:
 
 ```bash
-ssh -i ~/.ssh/6529PrenodeKey.pem ubuntu@$PRENODE_IP
+ssh -i ~/.ssh/$PRENODE_EC2_KEY_PAIR_NAME.pem ubuntu@$PRENODE_IP
 ```
 
 Source code can be found in `~/6529-Prenode`. You can find logs in `~/.pm2/logs`.
@@ -144,6 +154,14 @@ Compare the response with
 ```bash
 https://api.seize.io/oracle/address/0xADDRESS
 ```
+
+Thank you for supporting decentralization!
+
+### 2.7 Clean up
+
+Be sure you have removed the permissive IAM policy from any user accounts you created for this process.
+
+If you want to fully remove the Prenode resources from your AWS account, you can simply delete the CloudFormation stack to remove all resources created by the script. The easiest way to do so is from the CloudFormation console, by selecting the stack and choosing "Delete Stack".
 
 ## 3. Manual configuration
 
@@ -198,7 +216,7 @@ npm run set_env
 
 The database expects some initial data. Choose to load EITHER from latest snapshot or directly.
 
-## 3.2.1 Restore Snapshot
+## 3.2.1 Restore snapshot
 
 The best option is usually to restore a recent seize.io snapshot.
 
@@ -208,7 +226,7 @@ Populate your prenode database from the latest snapshot using the following
 npm run restore
 ```
 
-## 3.2.2 Direct Load
+## 3.2.2 Direct load
 
 DO NOT PROCEED if you have already restored from a snapshot. No need, you've got the data.
 
@@ -228,7 +246,7 @@ Run the following to restore transaction data
 npm run direct_load_trx
 ```
 
-## 3.3 Run Services
+## 3.3 Run services
 
 To ensure your application starts on system boot, you can use PM2’s startup script generator. Run the following command and follow the instructions provided:
 
@@ -236,11 +254,11 @@ To ensure your application starts on system boot, you can use PM2’s startup sc
 pm2 startup
 ```
 
-## 3.4 Set Up Log Rotation
+## 3.4 Set up log rotation
 
 PM2 can also manage log rotation, which is critical for ensuring that logs do not consume all available disk space.
 
-### 3.5 Manual Start
+### 3.5 Manual start
 
 #### 3.5.1 Run Prenode
 
@@ -270,7 +288,7 @@ pm2 start npm --name=6529Prenode-api -- run api
 pm2 save
 ```
 
-### 3.6 Scripted Start
+### 3.6 Scripted start
 
 ```bash
 scripts/start.sh
@@ -325,7 +343,7 @@ Get the latest Prenode source code by updating the repository.
 
 Choose between [4.1 Manual Update](#41-manual-update) or [4.2 Scripted Update](#42-scripted-update)
 
-### 4.1 Manual Update
+### 4.1 Manual update
 
 #### 4.1.1 Pull new changes
 
@@ -333,13 +351,13 @@ Choose between [4.1 Manual Update](#41-manual-update) or [4.2 Scripted Update](#
 git pull
 ```
 
-#### 4.1.2 Re-Install
+#### 4.1.2 Reinstall
 
 ```bash
 npm i
 ```
 
-#### 4.1.3 Re-Build
+#### 4.1.3 Rebuild
 
 ```bash
 npm run build
@@ -352,7 +370,7 @@ pm2 restart 6529Prenode
 pm2 restart 6529Prenode-api
 ```
 
-### 4.2 Scripted Update
+### 4.2 Scripted update
 
 ```bash
 scripts/update.sh
