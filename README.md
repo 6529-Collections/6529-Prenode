@@ -161,7 +161,7 @@ Thank you for supporting decentralization!
 
 Be sure you have removed the permissive IAM policy from any user accounts you created for this process.
 
-If you want to fully remove the Prenode resources from your AWS account, you can simply delete the CloudFormation stack to remove all resources created by the script. The easiest way to do so is from the CloudFormation console, by selecting the stack and choosing "Delete Stack".
+If you want to fully remove the Prenode resources from your AWS account, you can simply delete the CloudFormation stack to remove all resources created by the script. The easiest way to do so is from the CloudFormation console, by selecting the stack and choosing "Delete Stack". Be sure to Re-attach the Prenode IAM policy to your user account, so you have access to complete the cleanup.
 
 ## 3. Manual configuration
 
