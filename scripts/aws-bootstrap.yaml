@@ -154,9 +154,9 @@ Resources:
     Type: AWS::EC2::EIP
     Properties:
       Domain: vpc
-      InstanceId: !Ref PrenodeWebServerInstance
+      InstanceId: !Ref PrenodeEC2Instance
       
-  PrenodeWebServerInstance:
+  PrenodeEC2Instance:
     Type: AWS::EC2::Instance
     DependsOn: PrenodeDatabase
     Properties:
@@ -237,6 +237,9 @@ Resources:
         - DeviceName: "/dev/sda1"
           Ebs:
             VolumeSize: 30
+      Tags:
+      - Key: Name
+        Value: PrenodeEC2Instance
 
 Outputs:
   WebsiteURL:

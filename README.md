@@ -119,7 +119,7 @@ And you are basically done!
 
 Give it a few moments (it might take 10 minutes or more) to create the stack. The next steps here are just to verify that everything is working as expected.
 
-That's You can check the status of the stack from the AWS console, or by running:
+You can check the status of the stack from the AWS console, or by running:
 
 ```bash
 aws cloudformation describe-stacks --stack-name Prenode6529 --profile 6529Prenode
