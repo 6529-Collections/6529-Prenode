@@ -16,11 +16,11 @@ The 6529 Prenode is a service that provides a RESTful API for querying TDH data 
 
 To run the prenode, you'll need a domain name, a database, a server configured with SSL, the open-source TDH code, and some configuration.
 
-Since the setup of all these things can be a little tricky, we've provided a CloudFormation script that will automate much of the setup process for you, directly in your own AWS account. This script will create the required EC2 instance, RDS instance, and a Route 53 domain, and configure them all to work together in a standalone VPC environment (and no, you don't need to know what all that means to get it going). All told, this configuration should run for less than $20 / month.
+Since the setup of all these things can be a little tricky, we've provided a CloudFormation script that will automate much of the setup process for you, directly in your own AWS account. This script will create the required EC2 instance, RDS instance, and a Route 53 domain, and configure them all to work together in a standalone VPC environment (and no, you don't need to know what all that means to get it going). All told, this configuration should run for less than $50 / month (likely less if you have free tier resources available).
 
 If you want to run the Prenode in a diffrent context, you probably know what you are doing, and can use the automated scripts provided here to work out how to proceed.
 
-The Prenode endpoints are documented with OpenAPI Definitions, and published from the repo: [https://6529-collections.github.io/6529-Prenode/docs].
+The Prenode endpoints are documented with OpenAPI Definitions, and published from the repo: https://6529-collections.github.io/6529-Prenode/docs.
 
 ## 2. AWS setup
 
@@ -39,7 +39,7 @@ You'll need just a few things in place before starting the automated setup proce
 Sign in to your AWS account.
 
 1. Select (or create) the IAM user you want to use, initially with no access policies attached. Note the ARN of this user.
-1. Add a new IAM policy along the lines of the provided [IAM policy example](scripts/prenode-iam-policy-example.json), making sure you scope it your new user's ARN properly.
+1. Add a new IAM policy along the lines of the provided [IAM policy example](aws/prenode-iam-policy-example.json), making sure you scope it your new user's ARN properly.
 1. 'Add permission' to attach this policy to the user.
    > NOTE: This policy grants the user full access to a number of resources. Be SURE to remove the policy when done, so the user account can't be exploited.
 1. Now view the user's Security Credentials and generate a new Access Key for CLI usage.
@@ -64,6 +64,7 @@ aws ec2 create-key-pair --key-name $PRENODE_EC2_KEY_PAIR_NAME \
   --output text > ~/.ssh/$PRENODE_EC2_KEY_PAIR_NAME.pem \
   --query 'KeyMaterial' \
   --profile 6529Prenode
+chmod 400 ~/.ssh/$PRENODE_EC2_KEY_PAIR_NAME.pem
 ```
 
 ### 2.3 Get a domain name
@@ -80,7 +81,7 @@ In addition to the domain name, you will need the Hosted Zone ID for the domain.
 
 Find an Ubuntu AMI ID for your region you will deploy in. You can find the AMI ID for your region by visiting the <a href="https://cloud-images.ubuntu.com/locator/ec2/" target="_blank" rel="noreferrer">Ubuntu Cloud Image Locator</a>. Use the filters at the bottom of the table to select your preferred region, and the latest version of Ubuntu, and be sure it is `amd64` (to work with the instance type the script uses). That should narrow it down to a single option.
 
-If you are familiar with the AWS web-based console, you can build the stack by visiting the <a href="https://console.aws.amazon.com/cloudformation/home" target="_blank" rel="noreferrer">CloudFormation console</a>, and uploading the script `./scripts/aws-bootstrap.yaml`.
+If you are familiar with the AWS web-based console, you can build the stack by visiting the <a href="https://console.aws.amazon.com/cloudformation/home" target="_blank" rel="noreferrer">CloudFormation console</a>, and uploading the template from `./aws/prenode-deployment.yaml`.
 
 Or, you can run the commands below to create the stack and verify it from your command line.
 
@@ -102,7 +103,7 @@ Run the following command to create the CloudFormation stack:
 ```bash
 aws cloudformation create-stack \
   --stack-name Prenode6529 \
-  --template-body "$(curl -L https://raw.githubusercontent.com/6529-Collections/6529-Prenode/HEAD/scripts/aws-bootstrap.yaml)" \
+  --template-body "$(curl -L https://raw.githubusercontent.com/6529-Collections/6529-Prenode/HEAD/aws/prenode-deployment.yaml)" \
   --parameters ParameterKey=DomainName,ParameterValue=$PRENODE_DOMAIN \
                ParameterKey=AdminEmail,ParameterValue=$PRENODE_EMAIL \
                ParameterKey=AMIId,ParameterValue=$PRENODE_AMI_ID \
