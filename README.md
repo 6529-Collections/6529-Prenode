@@ -90,10 +90,15 @@ Set these values in your local environment (in addition to PRENODE_EC2_KEY_PAIR_
 Replace the `YOUR-*` values with what your stack should use:
 
 `export PRENODE_DOMAIN=your-domain-name`
+
 `export PRENODE_HOSTED_ZONE_ID=your-route53_hosted_zone_id`
+
 `export PRENODE_EMAIL=your-email`
+
 `export PRENODE_AMI_ID=your-ami-id`
+
 `export PRENODE_DB_PASSWORD=your-long-db-password-less-than-40-chars`
+
 `export ALCHEMY_API_KEY=your-alchemy-api-key`
 
 To keep any of these around for future terminal sessions, you can add them to your shell profile (e.g. `~/.bashrc`).
