@@ -1,130 +1,192 @@
+# 6529 Prenode
+
+## Table of Contents
+
 1. [Infrastructure](#1-infrastructure)
 
-2. [Setup](#2-setup)
+2. [AWS Setup](#2-aws-setup)
 
-   - 2.1 [Manual Setup](#21-manual-setup)
-   - 2.2 [Scripted Setup](#22-scripted-setup)
+3. [Manual Configuration](#3-manual-configuration)
 
-3. [Set Environment](#3-set-environment)
-
-4. [Initialize DB](#4-initialize-db)
-
-   - 4.1 [Restore Snapshot](#41-restore-snapshot)
-   - 4.2 [Direct Load](#42-direct-load)
-
-5. [Run Services](#5-run-services)
-
-   - 5.1 [Manual Start](#51-manual-start)
-   - 5.2 [Scripted Start](#52-scripted-start)
-
-6. [Updates](#6-updates)
-
-   - 6.1 [Manual Update](#61-manual-update)
-   - 6.2 [Scripted Update](#62-scripted-update)
-
-7. [OpenAPI Definition](https://6529-collections.github.io/6529-PreNode/docs)
+4. [Updates](#4-updates)
 
 ## 1. Infrastructure
 
+The 6529 Prenode is a service that provides a RESTful API for querying TDH data from the 6529 Collections smart contracts. It is the same logic used on seize.io, but provides a way to query data from the blockchain without needing to visit a centralized web page.
+
+To run the prenode, you'll need a domain name, a database, a server configured with SSL, the open-source TDH code, and some configuration.
+
+Since the setup of all these things can be a little tricky, we've provided a CloudFormation script that will automate much of the setup process for you, directly in your own AWS account. This script will create the required EC2 instance, RDS instance, and a Route 53 domain, and configure them all to work together in a standalone VPC environment (and no, you don't need to know what all that means to get it going). All told, this configuration should run for less than $50 / month (likely less if you have free tier resources available).
+
+If you want to run the Prenode in a diffrent context, you probably know what you are doing, and can use the automated scripts provided here to work out how to proceed.
+
+The Prenode endpoints are documented with OpenAPI Definitions, and published from the repo: https://6529-collections.github.io/6529-Prenode/docs.
+
+## 2. AWS setup
+
+You'll need just a few things in place before starting the automated setup process.
+
 **Prerequisites:**
 
-- you have an AWS EC2 instance configured (<a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/concepts.html" target="_blank" rel="noopener noreferrer">Read More</a>)
+- You need an AWS account, of course! If you don't have one, you can create one for free (but will be required to register a payment method). You'll also need just a little familiarity with using the AWS console (<a href="https://aws.amazon.com/" target="_blank" rel="noreferrer">Sign in now</a>) or the AWS CLI (<a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html" target="_blank" rel="noreferrer">Read More</a>)
 
-- you have an AWS RDS instance configured (<a href="https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html" target="_blank" rel="noopener noreferrer">Read More</a>)
+- Since the node is required to run securely over HTTPS, you'll need a domain name for an SSL certificate. The automated setup process will then get a free cert for you.
 
-## 2. Setup
+- The Prenode is querying data directly from the blockchain, so you'll need an Alchemy API key. You can get one for free by visiting the <a href="https://docs.alchemy.com/docs/alchemy-quickstart-guide" target="_blank" rel="noreferrer">Alchemy quick-start guide</a>.
 
-Clone repository "6529-PreNode" at branch `main`
+### 2.1 Configure AWS CLI
 
+Sign in to your AWS account.
+
+1. Select (or create) the IAM user you want to use, initially with no access policies attached. Note the ARN of this user.
+1. Add a new IAM policy along the lines of the provided [IAM policy example](aws/prenode-iam-policy-example.json), making sure you scope it your new user's ARN properly.
+1. 'Add permission' to attach this policy to the user.
+   > NOTE: This policy grants the user full access to a number of resources. Be SURE to remove the policy when done, so the user account can't be exploited.
+1. Now view the user's Security Credentials and generate a new Access Key for CLI usage.
+
+Set up your command line interface with a profile that uses this access key, secret access key, and your default region:
+
+```bash
+aws configure --profile 6529Prenode
 ```
-git clone  --branch main https://github.com/6529-Collections/6529-PreNode.git
+
+You can run this again if you ever need to update any of these settings.
+
+### 2.2 Generate a key pair
+
+To connect to the EC2 instance, you'll need to generate a key pair. As you will use this later, you can store the name of the key in an environment variable.
+
+You can do this by running the following commands:
+
+```bash
+export PRENODE_EC2_KEY_PAIR_NAME=PrenodeEC2KeyPairName
+aws ec2 create-key-pair --key-name $PRENODE_EC2_KEY_PAIR_NAME \
+  --output text > ~/.ssh/$PRENODE_EC2_KEY_PAIR_NAME.pem \
+  --query 'KeyMaterial' \
+  --profile 6529Prenode
+chmod 400 ~/.ssh/$PRENODE_EC2_KEY_PAIR_NAME.pem
+```
+
+### 2.3 Get a domain name
+
+Your node will require SSL, and therefore a domain name. You will need to provide this domain name in the next step.
+
+The automated CloudFormation setup process will configure the domain name for you, if you have a domain registered in Route 53.
+
+So, before you proceed to the next step, go get a new domain name, or transfer an existing one to Route 53. You can do this by visiting the <a href="https://console.aws.amazon.com/route53/home" target="_blank" rel="noreferrer">Route 53 console</a>.
+
+In addition to the domain name, you will need the Hosted Zone ID for the domain. You can find this by selecting the domain, and copying the Hosted Zone ID from the right-hand side of the page.
+
+### 2.4 Create the CloudFormation stack
+
+Find an Ubuntu AMI ID for your region you will deploy in. You can find the AMI ID for your region by visiting the <a href="https://cloud-images.ubuntu.com/locator/ec2/" target="_blank" rel="noreferrer">Ubuntu Cloud Image Locator</a>. Use the filters at the bottom of the table to select your preferred region, and the latest version of Ubuntu, and be sure it is `amd64` (to work with the instance type the script uses). That should narrow it down to a single option.
+
+If you are familiar with the AWS web-based console, you can build the stack by visiting the <a href="https://console.aws.amazon.com/cloudformation/home" target="_blank" rel="noreferrer">CloudFormation console</a>, and uploading the template from `./aws/prenode-deployment.yaml`.
+
+Or, you can run the commands below to create the stack and verify it from your command line.
+
+Set these values in your local environment (in addition to PRENODE_EC2_KEY_PAIR_NAME, which was done above) to make calling the CloudFormation script easier. You'll only need them once, to fire off the CloudFormation script from your command line. Copy the below into your CLI one at a time (with updated values) to save the values temporarily in your environment (until you close the CLI).
+
+Replace the `YOUR-*` values with what your stack should use:
+
+`export PRENODE_DOMAIN=your-domain-name`
+`export PRENODE_HOSTED_ZONE_ID=your-route53_hosted_zone_id`
+`export PRENODE_EMAIL=your-email`
+`export PRENODE_AMI_ID=your-ami-id`
+`export PRENODE_DB_PASSWORD=your-long-db-password-less-than-40-chars`
+`export ALCHEMY_API_KEY=your-alchemy-api-key`
+
+To keep any of these around for future terminal sessions, you can add them to your shell profile (e.g. `~/.bashrc`).
+
+Run the following command to create the CloudFormation stack:
+
+```bash
+aws cloudformation create-stack \
+  --stack-name Prenode6529 \
+  --template-body "$(curl -L https://raw.githubusercontent.com/6529-Collections/6529-Prenode/HEAD/aws/prenode-deployment.yaml)" \
+  --parameters ParameterKey=DomainName,ParameterValue=$PRENODE_DOMAIN \
+               ParameterKey=AdminEmail,ParameterValue=$PRENODE_EMAIL \
+               ParameterKey=AMIId,ParameterValue=$PRENODE_AMI_ID \
+               ParameterKey=MasterUserPassword,ParameterValue=$PRENODE_DB_PASSWORD \
+               ParameterKey=KeyName,ParameterValue=$PRENODE_EC2_KEY_PAIR_NAME \
+               ParameterKey=HostedZoneId,ParameterValue=$PRENODE_HOSTED_ZONE_ID \
+               ParameterKey=AlchemyAPIKey,ParameterValue=$ALCHEMY_API_KEY \
+  --profile 6529Prenode
+```
+
+Note: this command is expecting that you have properly set the environment variables in the previous step.
+
+And you are basically done!
+
+Give it a few moments (it might take 10 minutes or more) to create the stack. The next steps here are just to verify that everything is working as expected.
+
+You can check the status of the stack from the AWS console, or by running:
+
+```bash
+aws cloudformation describe-stacks --stack-name Prenode6529 --profile 6529Prenode
+```
+
+### 2.5 Get the public IP address
+
+Once the stack is created, you can hold the public IP address of your EC2 instance in an env var by running:
+
+```bash
+export PRENODE_IP=`aws cloudformation describe-stacks --stack-name Prenode6529 --query "Stacks[0].Outputs[?OutputKey=='ElasticIPAddress'].OutputValue" --output text --profile 6529Prenode`; echo $PRENODE_IP;
+```
+
+Now you can SSH into your EC2 instance, if you want to check the configuration:
+
+```bash
+ssh -i ~/.ssh/$PRENODE_EC2_KEY_PAIR_NAME.pem ubuntu@$PRENODE_IP
+```
+
+Source code can be found in `~/6529-Prenode`. You can find logs in `~/.pm2/logs`.
+
+### 2.6 Verify
+
+Once the CloudFormation stack has completed building out all resources, verify it is working by navigating to the domain name you provided in the CloudFormation script:
+
+```bash
+https://YOUR.DOMAIN.NAME/oracle/address/0xADDRESS
+```
+
+Compare the response with
+
+```bash
+https://api.seize.io/oracle/address/0xADDRESS
+```
+
+Thank you for supporting decentralization!
+
+### 2.7 Clean up
+
+Be sure you have removed the permissive IAM policy from any user accounts you created for this process.
+
+If you want to fully remove the Prenode resources from your AWS account, you can simply delete the CloudFormation stack to remove all resources created by the script. The easiest way to do so is from the CloudFormation console, by selecting the stack and choosing "Delete Stack". Be sure to Re-attach the Prenode IAM policy to your user account, so you have access to complete the cleanup.
+
+## 3. Manual configuration
+
+If you'd like to run the 6529 Prenode in any other context (Advanced), you can manually configure it using the following steps.
+
+DO NOT PROCEED if your AWS setup is complete.
+
+### 3.1 Get the code
+
+Clone repository "6529-Prenode" at branch `main`
+
+```bash
+git clone --branch main https://github.com/6529-Collections/6529-Prenode.git
 ```
 
 then change directory to the repository
 
-```
-cd 6529-PreNode/
-```
-
-Choose between [2.1 Manual Setup](#21-manual-setup) or [2.2 Scripted Setup](#22-scripted-setup)
-
-### 2.1 Manual Setup
-
-#### 2.1.2 Install NPM
-
-```
-sudo apt install npm
+```bash
+cd 6529-Prenode/
 ```
 
-Note: We need npm version v21. Get it using `n`
-
+```bash
+scripts/setup.sh # Install dependencies, configure pm2, turn on log rotations
 ```
-sudo npm i n -g
-```
-
-Select v21 using
-
-```
-sudo n 21
-```
-
-Reset your session using `hash -r`
-
-#### 2.1.2 Install Project Dependencies
-
-```
-npm i
-```
-
-#### 2.1.3 Build Project
-
-```
-npm run build
-```
-
-#### 2.1.4 PM2
-
-Services run using <a href="https://pm2.keymetrics.io/" target="_blank" rel="noopener noreferrer">PM2</a>
-
-##### 2.1.4.1 Install PM2
-
-```
-npm install pm2@latest -g
-```
-
-##### 2.1.4.2 Configure to Auto-restart on System Reboot
-
-To ensure your application starts on system boot, you can use PM2’s startup script generator. Run the following command and follow the instructions provided:
-
-```
-pm2 startup
-```
-
-##### 2.1.4.3 Set Up Log Rotation
-
-PM2 can also manage log rotation, which is critical for ensuring that logs do not consume all available disk space.
-
-```
-pm2 install pm2-logrotate
-```
-
-Configure log rotation settings (optional)
-
-```
-pm2 set pm2-logrotate:max_size 100M  # Rotate logs once they reach 100MB
-pm2 set pm2-logrotate:retain 10      # Keep 10 rotated logs
-pm2 set pm2-logrotate:compress true  # Compress (gzip) rotated logs
-pm2 set pm2-logrotate:dateFormat YYYY-MM-DD # Set the date format used in the log file names
-pm2 set pm2-logrotate:rotateModule true     # Rotate the log of pm2-logrotate itself
-```
-
-### 2.2 Scripted Setup
-
-```
-scripts/setup.sh
-```
-
-## 3. Set Environment
 
 To run the project you need a file to hold environment variable. The following script with run you through the process of creating this file.
 
@@ -137,7 +199,7 @@ To run the project you need a file to hold environment variable. The following s
   - admin user and password (used to create database and new users for the services but not saved in .env file)
   - new database user/password
 
-- you will be asked to provide Alchemy API key (get one <a href="https://docs.alchemy.com/docs/alchemy-quickstart-guide" target="_blank" rel="noopener noreferrer">here</a>)
+- you will be asked to provide Alchemy API key (get one <a href="https://docs.alchemy.com/docs/alchemy-quickstart-guide" target="_blank" rel="noreferrer">here</a>)
 
 - at the end of this process:
   - new database created
@@ -145,56 +207,66 @@ To run the project you need a file to hold environment variable. The following s
   - database tables created (empty)
   - a new file will be created `.env.prenode`
 
-```
+```bash
 npm run set_env
 ```
 
-<a href="https://github.com/6529-Collections/6529-PreNode/blob/main/.env.sample" target="_blank" rel="noopener noreferrer">Sample .env file</a>
+<a href="https://github.com/6529-Collections/6529-Prenode/blob/main/.env.sample" target="_blank" rel="noreferrer">Sample .env file</a>
 
-## 4. Initialize DB
+## 3.2 Initialize DB
 
-The database expects some initial data. Choose to load either from latest snapshot or directly
+The database expects some initial data. Choose to load EITHER from latest snapshot or directly.
 
-## 4.1 Restore Snapshot
+## 3.2.1 Restore snapshot
 
-Restore database from the latest snapshot using the following
+The best option is usually to restore a recent seize.io snapshot.
 
-```
+Populate your prenode database from the latest snapshot using the following
+
+```bash
 npm run restore
 ```
 
-## 4.2 Direct Load
+## 3.2.2 Direct load
 
-Two main components need to be loaded directly:
+DO NOT PROCEED if you have already restored from a snapshot. No need, you've got the data.
 
-### 4.2.1 NFTDelegation
+If you'd like to load data directly from the chain, you can do so by following the steps below.
+
+Two main components need to be loaded directly: NFTDelegation data and Transaction data.
 
 Run the following to restore data from NFTDelegation contract
 
-```
+```bash
 npm run direct_load_nftd
 ```
 
-### 4.2.2 Transactions
-
 Run the following to restore transaction data
 
-```
+```bash
 npm run direct_load_trx
 ```
 
-## 5. Run Services
+## 3.3 Run services
 
-Choose between [5.1 Manual Start](#51-manual-start) or [5.2 Scripted Start](#52-scripted-start)
+To ensure your application starts on system boot, you can use PM2’s startup script generator. Run the following command and follow the instructions provided:
 
-### 5.1 Manual Start
-
-#### 5.1.1 Run PreNode
-
-- PM2 process name: 6529PreNode
-
+```bash
+pm2 startup
 ```
-pm2 start npm --name=6529PreNode -- run prenode
+
+## 3.4 Set up log rotation
+
+PM2 can also manage log rotation, which is critical for ensuring that logs do not consume all available disk space.
+
+### 3.5 Manual start
+
+#### 3.5.1 Run Prenode
+
+- PM2 process name: 6529Prenode
+
+```bash
+pm2 start npm --name=6529Prenode -- run prenode
 ```
 
 - **CRON:** When starting the service, there are several scheduled cron jobs running at specific intervals which will consume data from the chain, process and save the result to the database.
@@ -202,86 +274,105 @@ pm2 start npm --name=6529PreNode -- run prenode
 
 - **Note:** On start, this service will always run the tdh calculation on start and the schedule it to run at 00:00 UTC
 
-#### 5.1.2 Run API
+#### 3.5.2 Run API
 
-- PM2 process name: 6529PreNode-api
+- PM2 process name: 6529Prenode-api
 - PORT: 3000
 
-```
-pm2 start npm --name=6529PreNode-api -- run api
+```bash
+pm2 start npm --name=6529Prenode-api -- run api
 ```
 
 **Note:** To ensure PM2 knows which processes to restart at boot, you need to save the list after starting the services
 
-```
+```bash
 pm2 save
 ```
 
-### 5.2 Scripted Start
+### 3.6 Scripted start
 
-```
+```bash
 scripts/start.sh
 ```
 
-### 5.3 Test
+### 3.7 Verify
 
-### 5.3.1 Local
+### 3.7.1 Local
 
 To test your api locally, navigate in your browser to:
 
-```
-http://localhost:3000/api/tdh/<address>
-```
-
-### 5.3.2 AWS
-
-If you are using AWS EC2, navigate to
-
-```
-http://[ip-address]:3000/api/tdh/<address>
+```bash
+http://localhost:3000/oracle/address/0xADDRESS
 ```
 
-Note: Please make sure that you have added an inbound rule on the instance security group for port 3000
+### 3.7.2 Production
+
+Once you have completed the above steps on your production server, you'll also need to ensure that your domain is pointing to the server's IP address, and is correctly configured for SSL.
+
+SSL traffic on port 443 will need be routed to port 3000 to reach the API server. Use the approach appropriate for your server to configure this.
+
+Config for nginx might look like:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name YOUR-DOMAIN-NAME;
+
+   #... SSL configuration
+
+   location / {
+      proxy_pass http://localhost:3000;
+   }
+}
+```
+
+When this is all working, you can finaly navigate to
+
+```bash
+https://YOUR-DOMAIN-NAME/oracle/address/0xADDRESS
+```
 
 Compare the response with
 
+```bash
+https://api.seize.io/oracle/address/0xADDRESS
 ```
-https://api.seize.io/api/tdh/<address>
-```
 
-## 6 Updates
+## 4 Updates
 
-Choose between [6.1 Manual Update](#61-manual-update) or [6.2 Scripted Update](#62-scripted-update)
+Get the latest Prenode source code by updating the repository.
 
-### 6.1 Manual Update
+Choose between [4.1 Manual Update](#41-manual-update) or [4.2 Scripted Update](#42-scripted-update)
 
-#### 6.1.1 Pull new changes
+### 4.1 Manual update
 
-```
+#### 4.1.1 Pull new changes
+
+```bash
 git pull
 ```
 
-#### 6.1.2 Re-Install
+#### 4.1.2 Reinstall
 
-```
+```bash
 npm i
 ```
 
-#### 6.1.3 Re-Build
+#### 4.1.3 Rebuild
 
-```
+```bash
 npm run build
 ```
 
-#### 6.1.4 Restart PreNode and API
+#### 4.1.4 Restart Prenode and API
 
-```
-pm2 restart 6529PreNode
-pm2 restart 6529PreNode-api
+```bash
+pm2 restart 6529Prenode
+pm2 restart 6529Prenode-api
 ```
 
-### 6.2 Scripted Update
+### 4.2 Scripted update
 
-```
+```bash
 scripts/update.sh
 ```

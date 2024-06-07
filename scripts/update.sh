@@ -47,7 +47,7 @@ npm run build
 
 # Step 4: Restart PM2 services
 print_message "Restarting PM2 services..."
-pm2 restart 6529PreNode --update-env
-pm2 restart 6529PreNode-api --update-env
+pm2 restart 6529Prenode --update-env
+pm2 restart 6529Prenode-api --update-env
 
 print_message "Update completed successfully!"
