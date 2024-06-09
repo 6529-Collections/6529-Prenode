@@ -14,24 +14,26 @@
 
 The 6529 Prenode decentralizes access to TDH data for 6529 Identities and 6529 NFTs. 
 
-As a web service running a RESTful API, it uses the same calculation logic used on the 6529 websites. Standardized setup through a provided CloudFormation script means anyone can run on their AWS account.
+### 1.1 Purpose
+
+As a web service running a RESTful API, it uses the same calculation logic as the 6529 websites. Standardized setup through a provided CloudFormation script means anyone can run on their AWS account.
 
 What is the purpose of the Prenode?  There are three purposes for the Prenode:
 
 1. Most important: The immediate use of the Prenode is to enable multiple parties to independently serve as TDH providers to the on-chain TDH oracle contract that will be launching soon™. This will allow for on-chain composable TDH that is not dependent on any single party.
-1. To allow anyone to serve as a API provider of TDH information in general, in any context, onchain or offchain.
+1. To allow anyone to serve as an API provider of TDH information in general, in any context, onchain or offchain.
 1. To serve as the first step towards 6529 Nodes that can run on any computing environment.
 
 Some further points:
 
 1. You should assume that there will be further updates to the Prenodes and, later, to Nodes.  The Prenode name will remain until the code is restructured to run in any computer environment.
-1. There are no current economic incentives to run a Prenode but it is something that can consider later if necessary.  Our current view is that there are sufficient people with the capacity and motivation to run a Prenode that it is better not to yet commit to a cryptoeconomic model that may be immature or not necessary.
+1. There are no current economic incentives to run a Prenode, but it is something that will be considered later if necessary.  Our current view is that there are sufficient people with the capacity and motivation to run a Prenode that it is better not to yet commit to a crypto-economic model that may be immature or not necessary.
 1. We estimate the cost of running a Prenode on AWS to be less than 0.015 ETH per month ($50 or so).
-1. For now, we would like to request that people and organizations with the economic capacity to do so to run Prenodes for the health of the network.
+1. For now, we request that people and organizations with the economic capacity to do so to run Prenodes for the health of the network.
 
-### 1.1 The technical details
+### 1.2 The technical details
 
-To run the prenode, you'll need a domain name, a database, a server configured with SSL, the open-source TDH code, and some configuration.
+To run the Prenode, you'll need a domain name, a database, a server configured with SSL, the open-source TDH code, and some configuration.
 
 Since the setup of all these things can be a little tricky, we've provided a CloudFormation script that will automate much of the setup process for you, directly in your own AWS account. This script will create the required EC2 instance, RDS instance, and a Route 53 domain, and configure them all to work together in a standalone VPC environment (and no, you don't need to know what all that means to get it going). All told, this configuration should run for less than $50/month (likely less if you have free tier resources available).
 
@@ -92,11 +94,11 @@ The automated CloudFormation setup process will configure the domain name for yo
 
 So, before you proceed to the next step, go get a new domain name, or transfer an existing one to Route 53. You can do this by visiting the <a href="https://console.aws.amazon.com/route53/home" target="_blank" rel="noreferrer">Route 53 console</a>.
 
-In addition to the domain name, you will need the Hosted Zone ID for the domain. You can find this by selecting the domain, and copying the Hosted Zone ID from the right-hand side of the page.
+In addition to the domain name, you will need the Hosted Zone ID for the domain. You can find this by selecting the domain and copying the Hosted Zone ID from the right-hand side of the page.
 
 ### 2.4 Create the CloudFormation stack
 
-Find an Ubuntu AMI ID for your region you will deploy in. You can find the AMI ID for your region by visiting the <a href="https://cloud-images.ubuntu.com/locator/ec2/" target="_blank" rel="noreferrer">Ubuntu Cloud Image Locator</a>. Use the filters at the bottom of the table to select your preferred region, and the latest version of Ubuntu, and be sure it is `amd64` (to work with the instance type the script uses). That should narrow it down to a single option.
+Find an Ubuntu AMI ID for the region you will deploy in. You can find the AMI ID for your region by visiting the <a href="https://cloud-images.ubuntu.com/locator/ec2/" target="_blank" rel="noreferrer">Ubuntu Cloud Image Locator</a>. Use the filters at the bottom of the table to select your preferred region, and the latest version of Ubuntu, and be sure it is `amd64` (to work with the instance type the script uses). That should narrow it down to a single option.
 
 If you are familiar with the AWS web-based console, you can build the stack by visiting the <a href="https://console.aws.amazon.com/cloudformation/home" target="_blank" rel="noreferrer">CloudFormation console</a>, and uploading the template from `./aws/prenode-deployment.yaml`.
 
@@ -136,7 +138,7 @@ aws cloudformation create-stack \
   --profile 6529Prenode
 ```
 
-Note: this command is expecting that you have properly set the environment variables in the previous step.
+Note: this command expects that you have properly set the environment variables in the previous step.
 
 And you are basically done!
 
@@ -162,7 +164,7 @@ Now you can SSH into your EC2 instance, if you want to check the configuration:
 ssh -i ~/.ssh/$PRENODE_EC2_KEY_PAIR_NAME.pem ubuntu@$PRENODE_IP
 ```
 
-Source code can be found in `~/6529-Prenode`. You can find logs in `~/.pm2/logs`.
+The source code can be found in `~/6529-Prenode`. You can find logs in `~/.pm2/logs`.
 
 ### 2.6 Verify
 
@@ -184,7 +186,7 @@ Thank you for supporting decentralization!
 
 Be sure you have removed the permissive IAM policy from any user accounts you created for this process.
 
-If you want to fully remove the Prenode resources from your AWS account, you can simply delete the CloudFormation stack to remove all resources created by the script. The easiest way to do so is from the CloudFormation console, by selecting the stack and choosing "Delete Stack". Be sure to Re-attach the Prenode IAM policy to your user account, so you have access to complete the cleanup.
+If you want to fully remove the Prenode resources from your AWS account, you can simply delete the CloudFormation stack to remove all resources created by the script. The easiest way to do so is from the CloudFormation console, by selecting the stack and choosing "Delete Stack". Be sure to Re-attach the Prenode IAM policy to your user account, to provide adequate access to complete the cleanup.
 
 ## 3. Manual configuration
 
@@ -210,7 +212,7 @@ cd 6529-Prenode/
 scripts/setup.sh # Install dependencies, configure pm2, turn on log rotations
 ```
 
-To run the project you need a file to hold environment variable. The following script with run you through the process of creating this file.
+To run the project you need a file to hold environment variables. The following script will run you through the process of creating this file.
 
 **Note:**
 
@@ -221,7 +223,7 @@ To run the project you need a file to hold environment variable. The following s
   - admin user and password (used to create database and new users for the services but not saved in .env file)
   - new database user/password
 
-- you will be asked to provide Alchemy API key (get one <a href="https://docs.alchemy.com/docs/alchemy-quickstart-guide" target="_blank" rel="noreferrer">here</a>)
+- you will be asked to provide an Alchemy API key (get one <a href="https://docs.alchemy.com/docs/alchemy-quickstart-guide" target="_blank" rel="noreferrer">here</a>)
 
 - at the end of this process:
   - new database created
@@ -237,13 +239,13 @@ npm run set_env
 
 ## 3.2 Initialize DB
 
-The database expects some initial data. Choose to load EITHER from latest snapshot or directly.
+The database expects some initial data. Choose to load EITHER from the latest snapshot or directly.
 
 ## 3.2.1 Restore snapshot
 
 The best option is usually to restore a recent seize.io snapshot.
 
-Populate your prenode database from the latest snapshot using the following
+Populate your Prenode database from the latest snapshot using the following
 
 ```bash
 npm run restore
@@ -257,7 +259,7 @@ If you'd like to load data directly from the chain, you can do so by following t
 
 Two main components need to be loaded directly: NFTDelegation data and Transaction data.
 
-Run the following to restore data from NFTDelegation contract
+Run the following to restore data from the NFTDelegation contract
 
 ```bash
 npm run direct_load_nftd
@@ -291,10 +293,10 @@ PM2 can also manage log rotation, which is critical for ensuring that logs do no
 pm2 start npm --name=6529Prenode -- run prenode
 ```
 
-- **CRON:** When starting the service, there are several scheduled cron jobs running at specific intervals which will consume data from the chain, process and save the result to the database.
+- **CRON:** When starting the service, several scheduled cron jobs are running at specific intervals which will consume onchain data, process it, and save the result to the database.
   e.g. discovering Transactions - there is a scheduled cron job to run every 2 minutes which detects new transactions on the chain and saves them in the database
 
-- **Note:** On start, this service will always run the tdh calculation on start and the schedule it to run at 00:00 UTC
+- **Note:** On start, this service will always run the TDH calculation on start and schedule it to run at 00:00 UTC
 
 #### 3.5.2 Run API
 
@@ -321,7 +323,7 @@ scripts/start.sh
 
 ### 3.7.1 Local
 
-To test your api locally, navigate in your browser to:
+To test your API locally, navigate in your browser to:
 
 ```bash
 http://localhost:3000/oracle/address/0xADDRESS
@@ -331,7 +333,7 @@ http://localhost:3000/oracle/address/0xADDRESS
 
 Once you have completed the above steps on your production server, you'll also need to ensure that your domain is pointing to the server's IP address, and is correctly configured for SSL.
 
-SSL traffic on port 443 will need be routed to port 3000 to reach the API server. Use the approach appropriate for your server to configure this.
+SSL traffic on port 443 needs be routed to port 3000 to reach the API server. Use the approach appropriate for your server to configure this.
 
 Config for nginx might look like:
 
@@ -348,7 +350,7 @@ server {
 }
 ```
 
-When this is all working, you can finaly navigate to
+When this is all working, you can finally navigate to
 
 ```bash
 https://YOUR-DOMAIN-NAME/oracle/address/0xADDRESS
