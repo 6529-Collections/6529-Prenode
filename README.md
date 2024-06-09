@@ -2,7 +2,7 @@
 
 ## Table of Contents
 
-1. [Infrastructure](#1-infrastructure)
+1. [Overview](#1-infrastructure)
 
 2. [AWS Setup](#2-aws-setup)
 
@@ -10,17 +10,34 @@
 
 4. [Updates](#4-updates)
 
-## 1. Infrastructure
+## 1. Overview
 
-The 6529 Prenode is a service that provides a RESTful API for querying TDH data from the 6529 Collections smart contracts. It is the same logic used on seize.io, but provides a way to query data from the blockchain without needing to visit a centralized web page.
+The 6529 Prenode decentralizes access to TDH data for 6529 Identities and 6529 NFTs. 
+
+As a web service running a RESTful API, it uses the same calculation logic used on the 6529 websites. Standardized setup through a provided CloudFormation script means anyone can run on their AWS account.
+
+What is the purpose of the Prenode?  There are three purposes for the Prenode:
+
+1. Most important: The immediate use of the Prenode is to enable multiple parties to independently serve as TDH providers to the on-chain TDH oracle contract that will be launching soon™. This will allow for on-chain composable TDH that is not dependent on any single party.
+1. To allow anyone to serve as a API provider of TDH information in general, in any context, onchain or offchain.
+1. To serve as the first step towards 6529 Nodes that can run on any computing environment.
+
+Some further points:
+
+1. You should assume that there will be further updates to the Prenodes and, later, to Nodes.  The Prenode name will remain until the code is restructured to run in any computer environment.
+1. There are no current economic incentives to run a Prenode but it is something that can consider later if necessary.  Our current view is that there are sufficient people with the capacity and motivation to run a Prenode that it is better not to yet commit to a cryptoeconomic model that may be immature or not necessary.
+1. We estimate the cost of running a Prenode on AWS to be less than 0.015 ETH per month ($50 or so).
+1. For now, we would like to request that people and organizations with the economic capacity to do so to run Prenodes for the health of the network.
+
+### 1.1 The technical details
 
 To run the prenode, you'll need a domain name, a database, a server configured with SSL, the open-source TDH code, and some configuration.
 
-Since the setup of all these things can be a little tricky, we've provided a CloudFormation script that will automate much of the setup process for you, directly in your own AWS account. This script will create the required EC2 instance, RDS instance, and a Route 53 domain, and configure them all to work together in a standalone VPC environment (and no, you don't need to know what all that means to get it going). All told, this configuration should run for less than $50 / month (likely less if you have free tier resources available).
+Since the setup of all these things can be a little tricky, we've provided a CloudFormation script that will automate much of the setup process for you, directly in your own AWS account. This script will create the required EC2 instance, RDS instance, and a Route 53 domain, and configure them all to work together in a standalone VPC environment (and no, you don't need to know what all that means to get it going). All told, this configuration should run for less than $50/month (likely less if you have free tier resources available).
 
-If you want to run the Prenode in a diffrent context, you probably know what you are doing, and can use the automated scripts provided here to work out how to proceed.
+Experienced cloud computing users who want to run Prenode in a different context can use the automated scripts provided here to work out how to proceed.
 
-The Prenode endpoints are documented with OpenAPI Definitions, and published from the repo: https://6529-collections.github.io/6529-Prenode/docs.
+The Prenode endpoints are documented with OpenAPI Definitions, and published from the repo: [https://6529-collections.github.io/6529-Prenode/docs](https://6529-collections.github.io/6529-Prenode/docs).
 
 ## 2. AWS setup
 
