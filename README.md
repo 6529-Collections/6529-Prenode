@@ -100,25 +100,25 @@ In addition to the domain name, you will need the Hosted Zone ID for the domain.
 
 Find an Ubuntu AMI ID for the region you will deploy in. You can find the AMI ID for your region by visiting the <a href="https://cloud-images.ubuntu.com/locator/ec2/" target="_blank" rel="noreferrer">Ubuntu Cloud Image Locator</a>. Use the filters at the bottom of the table to select your preferred region, and the latest version of Ubuntu, and be sure it is `amd64` (to work with the instance type the script uses). That should narrow it down to a single option.
 
-If you are familiar with the AWS web-based console, you can build the stack by visiting the <a href="https://console.aws.amazon.com/cloudformation/home" target="_blank" rel="noreferrer">CloudFormation console</a>, and uploading the template from `./aws/prenode-deployment.yaml`.
+If you are familiar with the AWS web-based tools, you can build the stack by visiting the <a href="https://console.aws.amazon.com/cloudformation/home" target="_blank" rel="noreferrer">CloudFormation console</a>, and uploading the template from `./aws/prenode-deployment.yaml`.
 
-Or, you can run the commands below to create the stack and verify it from your command line.
+Or, you can run the commands below in your local terminal to create the stack and verify it from your own machine's CLI environment.
 
 Set these values in your local environment (in addition to PRENODE_EC2_KEY_PAIR_NAME, which was done above) to make calling the CloudFormation script easier. You'll only need them once, to fire off the CloudFormation script from your command line. Copy the below into your CLI one at a time (with updated values) to save the values temporarily in your environment (until you close the CLI).
 
-Replace the `YOUR-*` values with what your stack should use:
+Replace the `your-*` values with what your stack should use:
 
-`export PRENODE_DOMAIN=your-domain-name`
+`export PRENODE_DOMAIN=your-domain-name # What FQDN do you want to use for accessing your Prenode?`
 
-`export PRENODE_HOSTED_ZONE_ID=your-route53_hosted_zone_id`
+`export PRENODE_HOSTED_ZONE_ID=your-route53_hosted_zone_id # Copy this directly from the Route 53 console`
 
-`export PRENODE_EMAIL=your-email`
+`export PRENODE_EMAIL=your-email # Used for administrative contact and SSL certificate registration`
 
-`export PRENODE_AMI_ID=your-ami-id`
+`export PRENODE_AMI_ID=your-ami-id # The AMI ID for the Ubuntu image you found`
 
-`export PRENODE_DB_PASSWORD=your-long-db-password-less-than-40-chars`
+`export PRENODE_DB_PASSWORD=your-long-db-password-less-than-40-chars # Pick a new password for the database that will be created`
 
-`export ALCHEMY_API_KEY=your-alchemy-api-key`
+`export ALCHEMY_API_KEY=your-alchemy-api-key # Copy this from the Alchemy API console`
 
 To keep any of these around for future terminal sessions, you can add them to your shell profile (e.g. `~/.bashrc`).
 
