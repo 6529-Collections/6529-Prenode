@@ -169,6 +169,7 @@ export const fetchNfts = async (contract?: string, id?: string) => {
     if (!n.season) {
       delete n.season;
     }
+    n.tdh = formatNumber(n.tdh);
     return n;
   });
 
