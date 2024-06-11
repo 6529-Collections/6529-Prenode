@@ -118,7 +118,7 @@ loadApi().then(() => {
 
   app.use(customErrorMiddleware());
 
-  app.listen(3000, function () {
+  app.listen(3005, function () {
     logger.info(
       `[CONFIG ${process.env.NODE_ENV}] [SERVER RUNNING ON PORT 3000]`
     );

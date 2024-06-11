@@ -9,7 +9,7 @@ import {
 } from '../constants';
 import { DefaultBoost, TDH, TokenTDH } from '../entities/ITDH';
 import { Transaction } from '../entities/ITransaction';
-import { areEqualAddresses, getDaysDiff } from '../helpers';
+import { areEqualAddresses, getDaysDiff, parseUTCDateString } from '../helpers';
 import { Alchemy } from 'alchemy-sdk';
 import {
   consolidateTransactions,
@@ -206,6 +206,10 @@ export const updateTDH = async (
   if (!block) {
     logger.error('No transactions found, skipping TDH calculation');
     return;
+  } else {
+    logger.info(
+      `[BLOCK ${block}] : [TDH DATE ${lastTDHCalc.toUTCString()}] : [CALCULATING TDH]`
+    );
   }
 
   const memeOwners = await fetchNftOwners(block, MEMES_CONTRACT);
@@ -700,7 +704,7 @@ function getTokenDatesFromConsolidation(
 
   const sortedTransactions = consolidationTransactions
     .map((c) => {
-      c.transaction_date = new Date(c.transaction_date);
+      c.transaction_date = parseUTCDateString(c.transaction_date);
       c.from_address = c.from_address.toLowerCase();
       c.to_address = c.to_address.toLowerCase();
       return c;

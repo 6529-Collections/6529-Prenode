@@ -57,13 +57,13 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "@serverless/typescript": "^3.38.0",
     "@aws-sdk/client-bedrock-runtime": "^3.535.0",
     "@aws-sdk/client-cloudfront": "^3.481.0",
     "@aws-sdk/client-s3": "^3.481.0",
     "@aws-sdk/client-sns": "^3.481.0",
     "@aws-sdk/s3-request-presigner": "^3.552.0",
     "@sentry/serverless": "^7.91.0",
+    "@serverless/typescript": "^3.38.0",
     "@types/multer": "^1.4.9",
     "@wagmi/chains": "^1.8.0",
     "alchemy-sdk": "^3.3.1",
@@ -84,6 +84,7 @@
     "json-2-csv": "^3.18.0",
     "memory-cache": "^0.2.0",
     "merkletreejs": "^0.3.10",
+    "moment-timezone": "^0.5.45",
     "mysql": "^2.18.1",
     "node-cron": "^3.0.3",
     "node-fetch": "^2.7.0",
