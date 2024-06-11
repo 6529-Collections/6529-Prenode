@@ -18,6 +18,6 @@ export class NFT {
   @Column({ type: 'int', default: 0 })
   edition_size!: number;
 
-  @Column({ type: 'double', default: 0 })
+  @Column({ type: 'int', default: 0 })
   tdh!: number;
 }

@@ -5,20 +5,13 @@ import {
   persistNftDelegationBlock
 } from '../db';
 import { findDelegationTransactions } from '../delegations';
-import {
-  Consolidation,
-  ConsolidationEvent,
-  DelegationEvent
-} from '../entities/IDelegation';
+import { ConsolidationEvent, DelegationEvent } from '../entities/IDelegation';
 import { loadEnv } from '../secrets';
 import { Logger } from '../logging';
 import { Time } from '../time';
 import { getLastTDH } from '../helpers';
 import { sqlExecutor } from '../sql-executor';
-import {
-  CONSOLIDATED_WALLETS_TDH_TABLE,
-  CONSOLIDATIONS_TABLE
-} from '../constants';
+import { CONSOLIDATED_WALLETS_TDH_TABLE } from '../constants';
 import { updateTDH } from '../tdhLoop/tdh';
 import { ConsolidatedTDH } from '../entities/ITDH';
 
