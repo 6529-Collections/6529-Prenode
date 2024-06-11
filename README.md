@@ -47,13 +47,15 @@ You'll need just a few things in place before starting the automated setup proce
 
 **Prerequisites:**
 
-- You need an AWS account, of course! If you don't have one, you can create one for free (but will be required to register a payment method). You'll also need just a little familiarity with using the AWS console (<a href="https://aws.amazon.com/" target="_blank" rel="noreferrer">Sign in now</a>) or the AWS CLI (<a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html" target="_blank" rel="noreferrer">Read More</a>)
+- You need an AWS account, of course! If you don't have one, you can create one for free (but will be required to register a payment method). You'll also need just a little familiarity with using the AWS console (<a href="https://aws.amazon.com/" target="_blank" rel="noreferrer">Sign in now</a>) and the AWS CLI (command line interface) tool (<a href="https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html" target="_blank" rel="noreferrer">installation guide</a>).
 
 - Since the node is required to run securely over HTTPS, you'll need a domain name for an SSL certificate. The automated setup process will then get a free cert for you.
 
 - The Prenode is querying data directly from the blockchain, so you'll need an Alchemy API key. You can get one for free by visiting the <a href="https://docs.alchemy.com/docs/alchemy-quickstart-guide" target="_blank" rel="noreferrer">Alchemy quick-start guide</a>.
 
 ### 2.1 Configure AWS CLI
+
+After some initial setup through the AWS web console, the rest of the process can be done from your computer's local CLI. You'll need to install the AWS CLI tool (see link above) and configure it to use your AWS account.
 
 Sign in to your AWS account.
 
@@ -63,7 +65,7 @@ Sign in to your AWS account.
    > NOTE: This policy grants the user full access to a number of resources. Be SURE to remove the policy when done, so the user account can't be exploited.
 1. Now view the user's Security Credentials and generate a new Access Key for CLI usage.
 
-Set up your command line interface with a profile that uses this access key, secret access key, and your default region:
+Now, configure your local computer terminal (NOT CloudShell) with a profile that uses this access key, secret access key, and your default region:
 
 ```bash
 aws configure --profile 6529Prenode
@@ -78,12 +80,12 @@ To connect to the EC2 instance, you'll need to generate a key pair. As you will 
 You can do this by running the following commands:
 
 ```bash
-export PRENODE_EC2_KEY_PAIR_NAME=PrenodeEC2KeyPairName
+export PRENODE_EC2_KEY_PAIR_NAME=PrenodeEC2KeyPairName;
 aws ec2 create-key-pair --key-name $PRENODE_EC2_KEY_PAIR_NAME \
   --output text > ~/.ssh/$PRENODE_EC2_KEY_PAIR_NAME.pem \
   --query 'KeyMaterial' \
-  --profile 6529Prenode
-chmod 400 ~/.ssh/$PRENODE_EC2_KEY_PAIR_NAME.pem
+  --profile 6529Prenode;
+chmod 400 ~/.ssh/$PRENODE_EC2_KEY_PAIR_NAME.pem;
 ```
 
 ### 2.3 Get a domain name
@@ -179,6 +181,10 @@ Compare the response with
 ```bash
 https://api.seize.io/oracle/address/0xADDRESS
 ```
+
+If you registered a new domain name, be sure to verify your email address within 15 days, as required by ICANN. Look for the subject "Verify your email address for..." in your inbox.
+
+Your Prenode should now be up and running, and ready for any TDH requests.
 
 Thank you for supporting decentralization!
 
