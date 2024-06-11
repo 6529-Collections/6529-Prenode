@@ -182,6 +182,10 @@ Compare the response with
 https://api.seize.io/oracle/address/0xADDRESS
 ```
 
+If you registered a new domain name, be sure to verify your email address within 15 days, as required by ICANN. Look for the subject "Verify your email address for..." in your inbox.
+
+Your Prenode should now be up and running, and ready for any TDH requests.
+
 Thank you for supporting decentralization!
 
 ### 2.7 Clean up
