@@ -375,7 +375,7 @@ Get the latest Prenode source code by updating the repository.
 First ssh or connect to your instance and change to the repository directory
 
 ```bash
-cd cd 6529-Prenode/
+cd 6529-Prenode/
 ```
 
 Choose between [4.1 Manual Update](#41-manual-update) or [4.2 Scripted Update](#42-scripted-update)
