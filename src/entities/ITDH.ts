@@ -124,10 +124,6 @@ export class TDH extends BaseTDH {
   wallet!: string;
 }
 
-export interface TDHENS extends TDH {
-  ens: string;
-}
-
 @Entity(CONSOLIDATED_WALLETS_TDH_TABLE)
 export class ConsolidatedTDH extends BaseTDH {
   @PrimaryColumn({ type: 'varchar', length: 200 })
@@ -140,6 +136,7 @@ export class ConsolidatedTDH extends BaseTDH {
 export interface TokenTDH {
   id: number;
   balance: number;
+  hodl_rate: number;
   tdh: number;
   tdh__raw: number;
 }

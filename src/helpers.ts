@@ -9,6 +9,7 @@ import * as short from 'short-uuid';
 import { goerli, sepolia } from '@wagmi/chains';
 import { Network } from 'alchemy-sdk';
 import { Transaction } from './entities/ITransaction';
+import moment from 'moment-timezone';
 
 export function areEqualAddresses(w1: string, w2: string) {
   if (!w1 || !w2) {
@@ -35,7 +36,7 @@ export function getDaysDiff(t1: Date, t2: Date, floor = true) {
 export function getLastTDH() {
   const now = new Date();
 
-  const tdh = new Date(
+  let tdh = new Date(
     Date.UTC(
       now.getUTCFullYear(),
       now.getUTCMonth(),
@@ -48,10 +49,17 @@ export function getLastTDH() {
   );
 
   if (tdh > now) {
-    return new Date(tdh.getTime() - 24 * 60 * 60 * 1000);
+    tdh = new Date(tdh.getTime() - 24 * 60 * 60 * 1000);
   }
-  return tdh;
+
+  const tdhStr = moment(tdh).tz('UTC').format('YYYY-MM-DD HH:mm:ss');
+  return parseUTCDateString(tdhStr);
 }
+
+export const parseUTCDateString = (dateString: any): Date => {
+  const parsedDate = moment.tz(dateString, 'YYYY-MM-DD HH:mm:ss', 'UTC');
+  return parsedDate.toDate();
+};
 
 export function delay(time: number) {
   return new Promise((resolve) => setTimeout(resolve, time));
@@ -141,7 +149,7 @@ export function extractConsolidationWallets(
   });
 
   if (uniqueWallets.some((w) => areEqualAddresses(w, wallet))) {
-    return uniqueWallets.sort();
+    return uniqueWallets.sort((a, b) => a.localeCompare(b));
   }
 
   return [wallet];

@@ -3,7 +3,6 @@ import { Time } from './time';
 import * as delegations from './delegationsLoop';
 import * as transactions from './transactionsLoop';
 import * as tdh from './tdhLoop';
-
 import cron from 'node-cron';
 
 import {
@@ -20,35 +19,53 @@ let RUNNING_DELEGATIONS = false;
 let RUNNING_TRX = false;
 
 // delegations every 3 minutes
-cron.schedule('*/3 * * * *', async () => {
-  if (RUNNING_TDH || RUNNING_DELEGATIONS) {
-    logger.info(
-      `[SKIPPING DELEGATIONS RUN] : [RUNNING_TDH: ${RUNNING_TDH}] : [RUNNING_DELEGATIONS: ${RUNNING_DELEGATIONS}]`
-    );
-    return;
+cron.schedule(
+  '*/3 * * * *',
+  async () => {
+    if (RUNNING_TDH || RUNNING_DELEGATIONS) {
+      logger.info(
+        `[SKIPPING DELEGATIONS RUN] : [RUNNING_TDH: ${RUNNING_TDH}] : [RUNNING_DELEGATIONS: ${RUNNING_DELEGATIONS}]`
+      );
+      return;
+    }
+    await runDelegations();
+  },
+  {
+    timezone: 'Etc/UTC'
   }
-  await runDelegations();
-});
+);
 
 // transactions every 2 minutes
-cron.schedule('*/2 * * * *', async () => {
-  if (RUNNING_TDH || RUNNING_TRX) {
-    logger.info(
-      `[SKIPPING TRANSACTIONS RUN] : [RUNNING_TDH: ${RUNNING_TDH}] : [RUNNING_TRX: ${RUNNING_TRX}]`
-    );
-    return;
+cron.schedule(
+  '*/2 * * * *',
+  async () => {
+    if (RUNNING_TDH || RUNNING_TRX) {
+      logger.info(
+        `[SKIPPING TRANSACTIONS RUN] : [RUNNING_TDH: ${RUNNING_TDH}] : [RUNNING_TRX: ${RUNNING_TRX}]`
+      );
+      return;
+    }
+    await runTransactions();
+  },
+  {
+    timezone: 'Etc/UTC'
   }
-  await runTransactions();
-});
+);
 
 // TDH calculations at 00:01
-cron.schedule('1 0 * * *', async () => {
-  if (RUNNING_TDH) {
-    logger.info(`[SKIPPING TDH RUN] : [RUNNING_TDH: ${RUNNING_TDH}]`);
-    return;
+cron.schedule(
+  '1 0 * * *',
+  async () => {
+    if (RUNNING_TDH) {
+      logger.info(`[SKIPPING TDH RUN] : [RUNNING_TDH: ${RUNNING_TDH}]`);
+      return;
+    }
+    await runTDH();
+  },
+  {
+    timezone: 'Etc/UTC'
   }
-  await runTDH();
-});
+);
 
 async function start() {
   const start = Time.now();
@@ -68,6 +85,7 @@ async function runDelegations(startBlock?: number) {
     await delegations.handler(startBlock);
   } catch (e) {
     logger.error(`Error during delegations run: ${e}`);
+    process.exit(1);
   } finally {
     RUNNING_DELEGATIONS = false;
   }
@@ -81,6 +99,7 @@ async function runTransactions() {
     await transactions.handler(NEXTGEN_CONTRACT.toLowerCase());
   } catch (e) {
     logger.error(`Error during transactions run: ${e}`);
+    process.exit(1);
   } finally {
     RUNNING_TRX = false;
   }
@@ -92,6 +111,7 @@ async function runTDH() {
     await tdh.handler();
   } catch (e) {
     logger.error(`Error during TDH run: ${e}`);
+    process.exit(1);
   } finally {
     RUNNING_TDH = false;
   }

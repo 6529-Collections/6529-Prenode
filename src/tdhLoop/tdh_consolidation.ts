@@ -1,4 +1,4 @@
-import { ConsolidatedTDH, TDHENS } from '../entities/ITDH';
+import { ConsolidatedTDH, TDH } from '../entities/ITDH';
 import {
   fetchAllConsolidatedTdh,
   fetchAllTDH,
@@ -21,7 +21,7 @@ import { NFT } from '../entities/INFT';
 const logger = Logger.get('TDH_CONSOLIDATION');
 
 export async function consolidateTDHForWallets(
-  tdh: TDHENS[],
+  tdh: TDH[],
   MEMES_COUNT: number
 ) {
   const consolidatedTdh: ConsolidatedTDH[] = [];
@@ -218,7 +218,7 @@ export const consolidateTDH = async (
   nfts: NFT[],
   startingWallets?: string[]
 ) => {
-  const tdh: TDHENS[] = await fetchAllTDH(startingWallets);
+  const tdh: TDH[] = await fetchAllTDH(startingWallets);
 
   const memes = nfts.filter((n) =>
     areEqualAddresses(n.contract, MEMES_CONTRACT)

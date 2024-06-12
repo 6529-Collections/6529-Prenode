@@ -12,13 +12,13 @@
 
 ## 1. Overview
 
-The 6529 Prenode decentralizes access to TDH data for 6529 Identities and 6529 NFTs. 
+The 6529 Prenode decentralizes access to TDH data for 6529 Identities and 6529 NFTs.
 
 ### 1.1 Purpose
 
 As a web service running a RESTful API, it uses the same calculation logic as the 6529 websites. Standardized setup through a provided CloudFormation script means anyone can run on their AWS account.
 
-What is the purpose of the Prenode?  There are three purposes for the Prenode:
+What is the purpose of the Prenode? There are three purposes for the Prenode:
 
 1. Most important: The immediate use of the Prenode is to enable multiple parties to independently serve as TDH providers to the on-chain TDH oracle contract that will be launching soon™. This will allow for on-chain composable TDH that is not dependent on any single party.
 1. To allow anyone to serve as an API provider of TDH information in general, in any context, onchain or offchain.
@@ -26,8 +26,8 @@ What is the purpose of the Prenode?  There are three purposes for the Prenode:
 
 Some further points:
 
-1. You should assume that there will be further updates to the Prenodes and, later, to Nodes.  The Prenode name will remain until the code is restructured to run in any computer environment.
-1. There are no current economic incentives to run a Prenode, but it is something that will be considered later if necessary.  Our current view is that there are sufficient people with the capacity and motivation to run a Prenode that it is better not to yet commit to a crypto-economic model that may be immature or not necessary.
+1. You should assume that there will be further updates to the Prenodes and, later, to Nodes. The Prenode name will remain until the code is restructured to run in any computer environment.
+1. There are no current economic incentives to run a Prenode, but it is something that will be considered later if necessary. Our current view is that there are sufficient people with the capacity and motivation to run a Prenode that it is better not to yet commit to a crypto-economic model that may be immature or not necessary.
 1. We estimate the cost of running a Prenode on AWS to be less than 0.015 ETH per month ($50 or so).
 1. For now, we request that people and organizations with the economic capacity to do so to run Prenodes for the health of the network.
 
@@ -371,6 +371,12 @@ https://api.seize.io/oracle/address/0xADDRESS
 ## 4 Updates
 
 Get the latest Prenode source code by updating the repository.
+
+First ssh or connect to your instance and change to the repository directory
+
+```bash
+cd 6529-Prenode/
+```
 
 Choose between [4.1 Manual Update](#41-manual-update) or [4.2 Scripted Update](#42-scripted-update)
 

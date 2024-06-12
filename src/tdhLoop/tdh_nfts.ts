@@ -41,7 +41,7 @@ export const getTdhForNft = (allTdh: ConsolidatedTDH[], nft: NFT) => {
   let totalTdh = 0;
   entries.forEach((e) => {
     const nftTdh = e[contractField].find((n) => n.id === nft.id)?.tdh ?? 0;
-    totalTdh += nftTdh * e.boost;
+    totalTdh += Math.round(nftTdh * e.boost);
   });
 
   return {

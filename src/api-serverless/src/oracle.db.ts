@@ -169,6 +169,7 @@ export const fetchNfts = async (contract?: string, id?: string) => {
     if (!n.season) {
       delete n.season;
     }
+    n.tdh = formatNumber(n.tdh);
     return n;
   });
 
@@ -322,7 +323,7 @@ export async function fetchSeasonsTDH(season?: string) {
   const seasons = results.map((r: any) => {
     return {
       season: r.season,
-      tdh: r.tdh
+      tdh: formatNumber(r.tdh)
     };
   });
   return {
