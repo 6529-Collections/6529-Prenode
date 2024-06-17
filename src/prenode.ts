@@ -35,9 +35,9 @@ cron.schedule(
   }
 );
 
-// transactions every 2 minutes
+// transactions every 5 minutes
 cron.schedule(
-  '*/2 * * * *',
+  '*/5 * * * *',
   async () => {
     if (RUNNING_TDH || RUNNING_TRX) {
       logger.info(
@@ -63,7 +63,8 @@ cron.schedule(
     await runTDH();
   },
   {
-    timezone: 'Etc/UTC'
+    timezone: 'Etc/UTC',
+    recoverMissedExecutions: true
   }
 );
 
@@ -73,7 +74,7 @@ async function start() {
 
   await loadEnv();
 
-  await runTDH();
+  // await runTDH();
 
   const diff = start.diffFromNow().formatAsDuration();
   logger.info(`[START SCRIPT COMPLETE IN ${diff}]`);
@@ -85,7 +86,6 @@ async function runDelegations(startBlock?: number) {
     await delegations.handler(startBlock);
   } catch (e) {
     logger.error(`Error during delegations run: ${e}`);
-    process.exit(1);
   } finally {
     RUNNING_DELEGATIONS = false;
   }
@@ -99,7 +99,6 @@ async function runTransactions() {
     await transactions.handler(NEXTGEN_CONTRACT.toLowerCase());
   } catch (e) {
     logger.error(`Error during transactions run: ${e}`);
-    process.exit(1);
   } finally {
     RUNNING_TRX = false;
   }
