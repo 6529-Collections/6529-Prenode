@@ -3,7 +3,12 @@
 # Function to check if script has changed
 check_script_update() {
   local SCRIPT_HASH_BEFORE=$1
-  local SCRIPT_HASH_AFTER=$(md5sum $0 | awk '{ print $1 }')
+  
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    local SCRIPT_HASH_AFTER=$(md5 -q $0)
+  else
+    local SCRIPT_HASH_AFTER=$(md5sum $0 | awk '{ print $1 }')
+  fi
 
   if [ "$SCRIPT_HASH_BEFORE" != "$SCRIPT_HASH_AFTER" ]; then
       echo "Update script modified. Re-executing the updated script."
@@ -17,7 +22,11 @@ set -e
 set -o pipefail
 
 # Capture initial script hash
-SCRIPT_HASH=$(md5sum $0 | awk '{ print $1 }')
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  SCRIPT_HASH=$(md5 -q $0)
+else
+  SCRIPT_HASH=$(md5sum $0 | awk '{ print $1 }')
+fi
 
 # Function to print messages
 print_message() {
@@ -27,6 +36,11 @@ print_message() {
   echo "================================================================"
   echo
 }
+
+NO_RESTORE=false
+if [ "$1" == "--no-restore" ]; then
+  NO_RESTORE=true
+fi
 
 # Step 1: Pull the latest changes from the specified branch
 print_message "Pulling the latest changes from the branch $BRANCH..."
@@ -46,9 +60,13 @@ print_message "Rebuilding the project..."
 npm run build
 
 # Step 4: Restore
-print_message "Restoring..."
-pm2 stop 6529Prenode
-npm run restore
+if [ "$NO_RESTORE" = false ]; then
+  print_message "Restoring..."
+  pm2 stop 6529Prenode
+  npm run restore
+else
+  print_message "Restore Skipped"
+fi
 
 # Step 5: Restart PM2 services
 print_message "Restarting PM2 services..."
