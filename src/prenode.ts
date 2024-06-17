@@ -74,7 +74,7 @@ async function start() {
 
   await loadEnv();
 
-  // await runTDH();
+  await runTDH();
 
   const diff = start.diffFromNow().formatAsDuration();
   logger.info(`[START SCRIPT COMPLETE IN ${diff}]`);
