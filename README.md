@@ -400,7 +400,16 @@ npm i
 npm run build
 ```
 
-#### 4.1.4 Restart Prenode and API
+#### 4.1.4 Restore (optional)
+
+At this point, if you wish to restore (optional but recommended) you can run the following:
+
+```bash
+pm2 stop 6529Prenode
+npm run restore
+```
+
+#### 4.1.5 Restart Prenode and API
 
 ```bash
 pm2 restart 6529Prenode
