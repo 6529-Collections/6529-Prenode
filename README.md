@@ -412,3 +412,10 @@ pm2 restart 6529Prenode-api
 ```bash
 scripts/update.sh
 ```
+
+Note: The scripted update will by default also restore your local database to the latest snapshot.
+If you want to disable the restore process, you can run:
+
+```bash
+scripts/update.sh --no-restore
+```
