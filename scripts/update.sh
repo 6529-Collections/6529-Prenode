@@ -45,11 +45,13 @@ npm install
 print_message "Rebuilding the project..."
 npm run build
 
-# Step 4: Restart PM2 services
-print_message "Restarting PM2 services..."
-
+# Step 4: Restore
+print_message "Restoring..."
 pm2 stop 6529Prenode
 npm run restore
+
+# Step 5: Restart PM2 services
+print_message "Restarting PM2 services..."
 pm2 restart 6529Prenode --update-env
 pm2 restart 6529Prenode-api --update-env
 
