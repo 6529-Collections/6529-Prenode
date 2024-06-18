@@ -43,7 +43,7 @@ const getDelegationDetails = async (txHash: string) => {
     const data = tx.data;
     try {
       const parsed = DELEGATIONS_IFACE.parseTransaction({ data, value: 0 });
-      if (parsed.args._expiryDate) {
+      if (parsed?.args._expiryDate) {
         return {
           expiry: parsed.args._expiryDate.toNumber(),
           allTokens: parsed.args._allTokens,
@@ -91,6 +91,9 @@ export const findDelegationTransactions = async (
   await Promise.all(
     allDelegations.map(async (d) => {
       const delResult = DELEGATIONS_IFACE.parseLog(d);
+      if (!delResult) {
+        return;
+      }
       const collection = delResult.args.collectionAddress;
       const from = delResult.args.delegator
         ? delResult.args.delegator

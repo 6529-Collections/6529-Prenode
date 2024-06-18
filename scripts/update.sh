@@ -42,6 +42,7 @@ if [ "$1" == "--no-restore" ]; then
   NO_RESTORE=true
 fi
 
+
 # Step 1: Pull the latest changes from the specified branch
 print_message "Pulling the latest changes from the branch $BRANCH..."
 git fetch origin
@@ -62,7 +63,6 @@ npm run build
 # Step 4: Restore
 if [ "$NO_RESTORE" = false ]; then
   print_message "Restoring..."
-  pm2 stop 6529Prenode
   npm run restore
 else
   print_message "Restore Skipped"

@@ -6,9 +6,7 @@ const logger = Logger.get('DIRECT_LOAD_NFTD');
 
 async function directLoad() {
   const start = Time.now();
-  logger.info(
-    `[CONFIG ${process.env.NODE_ENV}] [EXECUTING DIRECT DB LOAD FOR NFTD...]`
-  );
+  logger.info(`[EXECUTING DIRECT DB LOAD FOR NFTD...]`);
 
   await runDelegations(0);
 

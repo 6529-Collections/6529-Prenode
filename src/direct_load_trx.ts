@@ -12,9 +12,7 @@ const logger = Logger.get('DIRECT_LOAD_TRX');
 
 async function directLoad() {
   const start = Time.now();
-  logger.info(
-    `[CONFIG ${process.env.NODE_ENV}] [EXECUTING DIRECT DB LOAD FOR TRANSACTIONS...]`
-  );
+  logger.info(`[EXECUTING DIRECT DB LOAD FOR TRANSACTIONS...]`);
 
   await runTransactions();
 
