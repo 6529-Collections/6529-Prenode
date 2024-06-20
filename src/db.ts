@@ -294,13 +294,12 @@ export async function fetchAllNFTs() {
   return results;
 }
 
-export async function fetchAllTDH(wallets?: string[]) {
-  const tdhBlock = await fetchLatestTDHBlockNumber();
+export async function fetchAllTDH(block: number, wallets?: string[]) {
   let sql = `SELECT * FROM ${WALLETS_TDH_TABLE} WHERE block=:block `;
   if (wallets && wallets.length > 0) {
     sql += `AND ${WALLETS_TDH_TABLE}.wallet IN (:wallets)`;
   }
-  const results = await sqlExecutor.execute(sql, { block: tdhBlock, wallets });
+  const results = await sqlExecutor.execute(sql, { block, wallets });
   return results.map(parseTdhDataFromDB);
 }
 
@@ -444,7 +443,7 @@ export async function persistTDH(
       await tdhRepo.save(tdh);
     } else {
       logger.info(`[TDH] [DELETING ALL WALLETS FOR BLOCK ${block}]`);
-      await tdhRepo.delete({ block: block });
+      await tdhRepo.clear();
       logger.info(`[TDH] [CLEARED]`);
       await insertWithoutUpdate(tdhRepo, tdh);
     }

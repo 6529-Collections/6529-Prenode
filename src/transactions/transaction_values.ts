@@ -3,6 +3,7 @@ import {
   AssetTransfersCategory,
   AssetTransfersParams,
   fromHex,
+  Log,
   Network,
   Utils
 } from 'alchemy-sdk';
@@ -23,10 +24,9 @@ import {
 } from '../constants';
 import { Transaction } from '../entities/ITransaction';
 import { areEqualAddresses } from '../helpers';
-import { ethers } from 'ethers';
+import { ethers, Interface } from 'ethers';
 import { findTransactionsByHash } from '../db';
 import { Logger } from '../logging';
-import fetch from 'node-fetch';
 
 const logger = Logger.get('TRANSACTION_VALUES');
 
@@ -37,14 +37,14 @@ const MINT_FROM_ADDRESS =
   '0x0000000000000000000000000000000000000000000000000000000000000000';
 
 let alchemy: Alchemy;
-let SEAPORT_IFACE: any = undefined;
+let SEAPORT_IFACE: Interface;
 
 async function loadABIs() {
   const f = await fetch(
     `https://api.etherscan.io/api?module=contract&action=getabi&address=${OPENSEA_ADDRESS}&apikey=${process.env.ETHERSCAN_API_KEY}`
   );
-  const abi = await f.json();
-  SEAPORT_IFACE = new ethers.utils.Interface(abi.result);
+  const abi: any = await f.json();
+  SEAPORT_IFACE = new ethers.Interface(abi.result);
 
   logger.info(`[ROYALTIES] [ABIs LOADED] [SEAPORT ${f.status}]`);
 }
@@ -61,7 +61,7 @@ function resolveLogAddress(address: string) {
     return NULL_ADDRESS;
   }
   const addressHex = '0x' + address.slice(-40);
-  return ethers.utils.getAddress(addressHex);
+  return ethers.getAddress(addressHex);
 }
 
 function resolveLogValue(data: string) {
@@ -251,7 +251,7 @@ async function resolveValue(t: Transaction) {
 const parseSeaportLog = async (
   t: Transaction,
   royaltiesAddress: string,
-  log: ethers.providers.Log
+  log: Log
 ) => {
   let seaResult;
   try {
@@ -261,24 +261,24 @@ const parseSeaportLog = async (
     return null;
   }
 
-  let recipientConsideration = seaResult.args.consideration?.find((c: any) =>
+  let recipientConsideration = seaResult?.args.consideration?.find((c: any) =>
     areEqualAddresses(c.recipient, t.from_address)
   );
   if (!recipientConsideration) {
-    recipientConsideration = seaResult.args.offer?.find((o: any) =>
+    recipientConsideration = seaResult?.args.offer?.find((o: any) =>
       areEqualAddresses(o.recipient, t.from_address)
     );
   }
 
-  const royaltiesConsideration = seaResult.args.consideration?.find((c: any) =>
+  const royaltiesConsideration = seaResult?.args.consideration?.find((c: any) =>
     areEqualAddresses(c.recipient, royaltiesAddress)
   );
 
-  let tokenConsideration = seaResult.args.consideration?.find((o: any) =>
+  let tokenConsideration = seaResult?.args.consideration?.find((o: any) =>
     areEqualAddresses(o.token, t.contract)
   );
   if (!tokenConsideration) {
-    tokenConsideration = seaResult.args.offer?.find((o: any) =>
+    tokenConsideration = seaResult?.args.offer?.find((o: any) =>
       areEqualAddresses(o.token, t.contract)
     );
   }
@@ -292,14 +292,14 @@ const parseSeaportLog = async (
 
     let totalAmount = 0;
 
-    seaResult.args.offer
+    seaResult?.args.offer
       .filter((o: any) => !areEqualAddresses(o.token, t.contract))
       .map((o: any) => {
         totalAmount += parseFloat(Utils.formatEther(o.amount));
       });
 
     if (totalAmount == 0) {
-      seaResult.args.consideration
+      seaResult?.args.consideration
         .filter((o: any) => !areEqualAddresses(o.token, contract))
         .map((o: any) => {
           totalAmount += parseFloat(Utils.formatEther(o.amount));

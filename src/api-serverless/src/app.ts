@@ -121,9 +121,7 @@ loadApi().then(() => {
   app.use(customErrorMiddleware());
 
   app.listen(API_PORT, function () {
-    logger.info(
-      `[CONFIG ${process.env.NODE_ENV}] [SERVER RUNNING ON PORT ${API_PORT}]`
-    );
+    logger.info(`[SERVER RUNNING ON PORT ${API_PORT}]`);
   });
 });
 

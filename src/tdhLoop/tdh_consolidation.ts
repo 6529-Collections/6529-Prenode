@@ -215,10 +215,11 @@ export const consolidateMissingWallets = async (
 };
 
 export const consolidateTDH = async (
+  block: number,
   nfts: NFT[],
   startingWallets?: string[]
 ) => {
-  const tdh: TDH[] = await fetchAllTDH(startingWallets);
+  const tdh: TDH[] = await fetchAllTDH(block, startingWallets);
 
   const memes = nfts.filter((n) =>
     areEqualAddresses(n.contract, MEMES_CONTRACT)

@@ -466,7 +466,7 @@ export const updateTDH = async (
 
   await persistTDH(block, rankedTdh, startingWallets);
   await persistTDHBlock(block, timestamp);
-  await consolidateTDH(ADJUSTED_NFTS, startingWallets);
+  await consolidateTDH(block, ADJUSTED_NFTS, startingWallets);
   await processNftTdh(ADJUSTED_NFTS);
 
   return {

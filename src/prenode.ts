@@ -11,9 +11,13 @@ import {
   NEXTGEN_CONTRACT
 } from './constants';
 import { loadEnv } from './secrets';
+import { spawn } from 'child_process';
 
 const logger = Logger.get('PRE_NODE');
 
+const RESTORE_DATE = 1;
+
+let RUNNING_UPDATE = false;
 let RUNNING_TDH = false;
 let RUNNING_DELEGATIONS = false;
 let RUNNING_TRX = false;
@@ -22,9 +26,9 @@ let RUNNING_TRX = false;
 cron.schedule(
   '*/3 * * * *',
   async () => {
-    if (RUNNING_TDH || RUNNING_DELEGATIONS) {
+    if (RUNNING_TDH || RUNNING_UPDATE || RUNNING_DELEGATIONS) {
       logger.info(
-        `[SKIPPING DELEGATIONS RUN] : [RUNNING_TDH: ${RUNNING_TDH}] : [RUNNING_DELEGATIONS: ${RUNNING_DELEGATIONS}]`
+        `[SKIPPING DELEGATIONS RUN] : [RUNNING_TDH: ${RUNNING_TDH}] : [RUNNING_UPDATE: ${RUNNING_UPDATE}] : [RUNNING_DELEGATIONS: ${RUNNING_DELEGATIONS}]`
       );
       return;
     }
@@ -35,13 +39,13 @@ cron.schedule(
   }
 );
 
-// transactions every 2 minutes
+// transactions every 5 minutes
 cron.schedule(
-  '*/2 * * * *',
+  '*/5 * * * *',
   async () => {
-    if (RUNNING_TDH || RUNNING_TRX) {
+    if (RUNNING_TDH || RUNNING_UPDATE || RUNNING_TRX) {
       logger.info(
-        `[SKIPPING TRANSACTIONS RUN] : [RUNNING_TDH: ${RUNNING_TDH}] : [RUNNING_TRX: ${RUNNING_TRX}]`
+        `[SKIPPING TRANSACTIONS RUN] : [RUNNING_TDH: ${RUNNING_TDH}] : [RUNNING_UPDATE: ${RUNNING_UPDATE}] : [RUNNING_TRX: ${RUNNING_TRX}]`
       );
       return;
     }
@@ -52,24 +56,41 @@ cron.schedule(
   }
 );
 
-// TDH calculations at 00:01
+// TDH calculations (update and restart) at 00:01
 cron.schedule(
   '1 0 * * *',
-  async () => {
-    if (RUNNING_TDH) {
-      logger.info(`[SKIPPING TDH RUN] : [RUNNING_TDH: ${RUNNING_TDH}]`);
+  () => {
+    if (RUNNING_UPDATE) {
       return;
     }
-    await runTDH();
+    runUpdate();
   },
   {
-    timezone: 'Etc/UTC'
+    timezone: 'Etc/UTC',
+    recoverMissedExecutions: true
+  }
+);
+
+// RESTORE at 02:01 UTC on the RESTORE_DATE of every month
+cron.schedule(
+  '1 2 * * *',
+  async () => {
+    if (RUNNING_UPDATE) {
+      return;
+    }
+    if (new Date().getDate() === RESTORE_DATE) {
+      runUpdate(true);
+    }
+  },
+  {
+    timezone: 'Etc/UTC',
+    recoverMissedExecutions: true
   }
 );
 
 async function start() {
   const start = Time.now();
-  logger.info(`[CONFIG ${process.env.NODE_ENV}] [EXECUTING START SCRIPT...]`);
+  logger.info(`[EXECUTING START SCRIPT...]`);
 
   await loadEnv();
 
@@ -85,7 +106,6 @@ async function runDelegations(startBlock?: number) {
     await delegations.handler(startBlock);
   } catch (e) {
     logger.error(`Error during delegations run: ${e}`);
-    process.exit(1);
   } finally {
     RUNNING_DELEGATIONS = false;
   }
@@ -99,7 +119,6 @@ async function runTransactions() {
     await transactions.handler(NEXTGEN_CONTRACT.toLowerCase());
   } catch (e) {
     logger.error(`Error during transactions run: ${e}`);
-    process.exit(1);
   } finally {
     RUNNING_TRX = false;
   }
@@ -115,6 +134,33 @@ async function runTDH() {
   } finally {
     RUNNING_TDH = false;
   }
+}
+
+function runUpdate(restore?: boolean) {
+  const args = ['scripts/update.sh'];
+  if (!restore) {
+    args.push('--no-restore');
+  }
+
+  logger.info(
+    `[UPDATE] Running update script (${restore ? 'with' : 'without'} restore)`
+  );
+
+  RUNNING_UPDATE = true;
+  const updateScript = spawn('bash', args);
+
+  updateScript.stdout.on('data', (data) => {
+    logger.info(`[UPDATE] \n ${data}`);
+  });
+
+  updateScript.stderr.on('data', (data) => {
+    logger.error(`[UPDATE] \n ${data}`);
+  });
+
+  updateScript.on('error', (error) => {
+    logger.error(`[UPDATE] \n ${error.message}`);
+    RUNNING_UPDATE = false;
+  });
 }
 
 start();

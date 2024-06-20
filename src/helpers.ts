@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import axios, { AxiosResponse } from 'axios';
 import {
   CONSOLIDATIONS_LIMIT,
