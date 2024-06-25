@@ -25,7 +25,7 @@ const parseToken = (
   };
 };
 
-const getBlock = async () => {
+export const getBlock = async () => {
   const blockResult = await sqlExecutor.execute(
     `SELECT MAX(block) as block from ${CONSOLIDATED_WALLETS_TDH_TABLE}`
   );
