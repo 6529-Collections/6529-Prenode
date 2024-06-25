@@ -99,7 +99,7 @@ export const findDelegationTransactions = async (
         ? delResult.args.delegator
         : delResult.args.from;
       const to = delResult.args.delegationAddress;
-      const useCase = delResult.args.useCase.toNumber();
+      const useCase = parseInt(delResult.args.useCase, 16);
 
       if (
         !areEqualAddresses(from, to) ||

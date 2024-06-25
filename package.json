@@ -91,5 +91,10 @@
     "short-uuid": "^4.2.2",
     "slugify": "^1.6.6",
     "winston": "^3.11.0"
+  },
+  "overrides": {
+    "alchemy-sdk": {
+      "ws": "8.17.1"
+    }
   }
 }
