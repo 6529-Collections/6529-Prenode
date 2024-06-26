@@ -106,7 +106,7 @@ async function start() {
 
   await loadEnv();
 
-  // await runTDH();
+  await runTDH();
 
   await pingSeize();
 
@@ -182,7 +182,7 @@ async function pingSeize() {
     const info = await fetchPingInfo();
     logger.info(`[PING SEIZE] : [INFO ${JSON.stringify(info)}]`);
     const response = await fetch(
-      'http://localhost:3000/oracle/register-prenode',
+      'https://api.staging.seize.io/oracle/register-prenode',
       {
         method: 'POST',
         headers: {
