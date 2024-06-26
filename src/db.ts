@@ -30,6 +30,7 @@ import { Time } from './time';
 import { insertWithoutUpdate, resetRepository } from './orm_helpers';
 import { NFTOwner } from './entities/INFTOwner';
 import { getBlock } from './api-serverless/src/oracle.db';
+import { getServerName } from './exec_commands';
 
 const mysql = require('mysql');
 
@@ -696,14 +697,15 @@ export async function fetchMintDate(contract: string, tokenId: number) {
 }
 
 export async function fetchPingInfo() {
-  const domain = process.env.DOMAIN ?? '';
-  const block = await getBlock();
-  const tdh =
+  const domain = await getServerName();
+  const block = Number(await getBlock());
+  const tdh = Number(
     (
       await sqlExecutor.execute(`
         SELECT SUM(boosted_tdh) as total_tdh FROM ${CONSOLIDATED_WALLETS_TDH_TABLE}
       `)
-    )[0]?.total_tdh ?? 0;
+    )[0]?.total_tdh ?? 0
+  );
 
   return {
     domain,
