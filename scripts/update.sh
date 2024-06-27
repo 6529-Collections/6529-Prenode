@@ -70,7 +70,7 @@ fi
 
 # Step 5: Restart PM2 services
 print_message "Restarting PM2 services..."
-pm2 restart 6529Prenode --update-env
 pm2 restart 6529Prenode-api --update-env
+pm2 restart 6529Prenode --update-env
 
 print_message "Update completed successfully!"

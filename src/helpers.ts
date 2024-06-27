@@ -406,3 +406,7 @@ export function getTransactionLink(chain_id: number, hash: string) {
       return `https://etherscan.io/tx/${hash}`;
   }
 }
+
+export async function sleep(millis: number) {
+  return new Promise((resolve) => setTimeout(resolve, millis));
+}

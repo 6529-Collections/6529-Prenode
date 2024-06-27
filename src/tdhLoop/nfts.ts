@@ -9,6 +9,7 @@ import {
 import { NFT } from '../entities/INFT';
 import { fetchMintDate } from '../db';
 import { NFTOwner } from '../entities/INFTOwner';
+import { sleep } from '../helpers';
 
 let alchemy: Alchemy;
 
@@ -118,6 +119,7 @@ async function getNFTResponse(alchemy: Alchemy, contract: string, key: any) {
     settings.pageKey = key;
   }
 
+  await sleep(1000);
   const response = await alchemy.nft.getNftsForContract(contract, settings);
   return response;
 }
