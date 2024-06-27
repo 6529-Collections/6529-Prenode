@@ -39,7 +39,7 @@ check_script_update $SCRIPT_HASH
 
 # Step 2: Reinstall dependencies
 print_message "Reinstalling dependencies..."
-npm install
+npx npm install
 
 # Step 3: Rebuild the project
 print_message "Rebuilding the project..."
