@@ -12,6 +12,7 @@ import {
 } from './constants';
 import { loadEnv } from './secrets';
 import { spawn } from 'child_process';
+import { fetchPingInfo } from './db';
 
 const logger = Logger.get('PRE_NODE');
 
@@ -88,6 +89,17 @@ cron.schedule(
   }
 );
 
+// ping seize every hour at 31 minutes
+cron.schedule(
+  '31 * * * *',
+  async () => {
+    await pingSeize();
+  },
+  {
+    timezone: 'Etc/UTC'
+  }
+);
+
 async function start() {
   const start = Time.now();
   logger.info(`[EXECUTING START SCRIPT...]`);
@@ -95,6 +107,8 @@ async function start() {
   await loadEnv();
 
   await runTDH();
+
+  await pingSeize();
 
   const diff = start.diffFromNow().formatAsDuration();
   logger.info(`[START SCRIPT COMPLETE IN ${diff}]`);
@@ -161,6 +175,31 @@ function runUpdate(restore?: boolean) {
     logger.error(`[UPDATE] \n ${error.message}`);
     RUNNING_UPDATE = false;
   });
+}
+
+async function pingSeize() {
+  try {
+    const info = await fetchPingInfo();
+    logger.info(`[PING SEIZE] : [INFO ${JSON.stringify(info)}]`);
+    const response = await fetch(
+      'https://api.seize.io/oracle/register-prenode',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(info)
+      }
+    );
+    const body = await response.json();
+    logger.info(
+      `[PING SEIZE] : [STATUS ${response.status}] : [BODY ${JSON.stringify(
+        body
+      )}]`
+    );
+  } catch (e: any) {
+    logger.error(`[PING SEIZE] : [ERROR ${e.message}]`);
+  }
 }
 
 start();

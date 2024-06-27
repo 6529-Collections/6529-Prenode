@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { DataSource, LessThan, MoreThanOrEqual, QueryRunner } from 'typeorm';
 import {
+  CONSOLIDATED_WALLETS_TDH_TABLE,
   GRADIENT_CONTRACT,
   MEMES_CONTRACT,
   NFTS_TABLE,
@@ -28,6 +29,8 @@ import { DbQueryOptions } from './db-query.options';
 import { Time } from './time';
 import { insertWithoutUpdate, resetRepository } from './orm_helpers';
 import { NFTOwner } from './entities/INFTOwner';
+import { getBlock } from './api-serverless/src/oracle.db';
+import { getServerName } from './exec_commands';
 
 const mysql = require('mysql');
 
@@ -691,4 +694,22 @@ export async function fetchMintDate(contract: string, tokenId: number) {
     { contract, tokenId }
   );
   return firstTransaction[0]?.transaction_date;
+}
+
+export async function fetchPingInfo() {
+  const domain = await getServerName();
+  const block = Number(await getBlock());
+  const tdh = Number(
+    (
+      await sqlExecutor.execute(`
+        SELECT SUM(boosted_tdh) as total_tdh FROM ${CONSOLIDATED_WALLETS_TDH_TABLE}
+      `)
+    )[0]?.total_tdh ?? 0
+  );
+
+  return {
+    domain,
+    tdh,
+    block
+  };
 }
