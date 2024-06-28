@@ -706,8 +706,10 @@ export async function fetchPingInfo() {
       `)
     )[0]?.total_tdh ?? 0
   );
+  const seizeProfile = process.env.SEIZE_PROFILE || 'N/A';
 
   return {
+    seizeProfile,
     domain,
     tdh,
     block

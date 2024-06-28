@@ -110,6 +110,8 @@ Set these values in your local environment (in addition to PRENODE_EC2_KEY_PAIR_
 
 Replace the `your-*` values with what your stack should use:
 
+`export PRENODE_SEIZE_PROFILE=your-seize-name # Link this prenode to your seize.io Identity
+
 `export PRENODE_DOMAIN=your-domain-name # What FQDN do you want to use for accessing your Prenode?`
 
 `export PRENODE_HOSTED_ZONE_ID=your-route53_hosted_zone_id # Copy this directly from the Route 53 console`
@@ -137,6 +139,7 @@ aws cloudformation create-stack \
                ParameterKey=KeyName,ParameterValue=$PRENODE_EC2_KEY_PAIR_NAME \
                ParameterKey=HostedZoneId,ParameterValue=$PRENODE_HOSTED_ZONE_ID \
                ParameterKey=AlchemyAPIKey,ParameterValue=$ALCHEMY_API_KEY \
+               ParameterKey=SeizeProfile,ParameterValue=$PRENODE_SEIZE_PROFILE \
   --profile 6529Prenode
 ```
 
