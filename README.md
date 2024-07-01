@@ -72,7 +72,7 @@ Sign in to your AWS account.
 Now, configure your local computer terminal (NOT CloudShell) with a profile that uses this access key, secret access key, and your default region:
 
 ```bash
-aws configure --profile 6529prenode
+aws configure --profile 6529Prenode
 ```
 
 You can run this again if you ever need to update any of these settings.
@@ -88,7 +88,7 @@ export PRENODE_EC2_KEY_PAIR_NAME=PrenodeEC2KeyPairName;
 aws ec2 create-key-pair --key-name $PRENODE_EC2_KEY_PAIR_NAME \
   --output text > ~/.ssh/$PRENODE_EC2_KEY_PAIR_NAME.pem \
   --query 'KeyMaterial' \
-  --profile 6529prenode;
+  --profile 6529Prenode;
 chmod 400 ~/.ssh/$PRENODE_EC2_KEY_PAIR_NAME.pem;
 ```
 
@@ -160,7 +160,7 @@ aws cloudformation create-stack \
                ParameterKey=AlchemyAPIKey,ParameterValue=$ALCHEMY_API_KEY \
                ParameterKey=OwnerAddress,ParameterValue=$PRENODE_SEIZE_PROFILE \
                ParameterKey=OwnerSignatureHash,ParameterValue=$PRENODE_SEIZE_PROFILE \
-  --profile 6529prenode
+  --profile 6529Prenode
 ```
 
 Note: this command expects that you have properly set the environment variables in the previous step.
@@ -172,7 +172,7 @@ Give it a few moments (it might take 10 minutes or more) to create the stack. Th
 You can check the status of the stack from the AWS console, or by running:
 
 ```bash
-aws cloudformation describe-stacks --stack-name Prenode6529 --profile 6529prenode
+aws cloudformation describe-stacks --stack-name Prenode6529 --profile 6529Prenode
 ```
 
 ### 2.5 Get the public IP address
@@ -180,7 +180,7 @@ aws cloudformation describe-stacks --stack-name Prenode6529 --profile 6529prenod
 Once the stack is created, you can hold the public IP address of your EC2 instance in an env var by running:
 
 ```bash
-export PRENODE_IP=`aws cloudformation describe-stacks --stack-name Prenode6529 --query "Stacks[0].Outputs[?OutputKey=='ElasticIPAddress'].OutputValue" --output text --profile 6529prenode`; echo $PRENODE_IP;
+export PRENODE_IP=`aws cloudformation describe-stacks --stack-name Prenode6529 --query "Stacks[0].Outputs[?OutputKey=='ElasticIPAddress'].OutputValue" --output text --profile 6529Prenode`; echo $PRENODE_IP;
 ```
 
 Now you can SSH into your EC2 instance, if you want to check the configuration:
