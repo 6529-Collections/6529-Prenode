@@ -15,6 +15,7 @@ import { Transaction } from '../entities/ITransaction';
 import { findTransactionValues } from './transaction_values';
 import { consolidateTransactions } from '../db';
 import { Time } from '../time';
+import { sleep } from '../helpers';
 
 export class TransactionsDiscoveryService {
   private readonly logger = Logger.get(TransactionsDiscoveryService.name);
@@ -82,6 +83,8 @@ export class TransactionsDiscoveryService {
         contract,
         pageKey
       );
+
+      await sleep(1000); // Alchemy rate limit
       const { transfers, pageKey: nextPageKey } =
         await this.alchemy.core.getAssetTransfers(alchemyParams);
 

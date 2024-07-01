@@ -42,7 +42,7 @@ async function getOwners(
 }
 
 async function getOwnersForPage(block: number, contract: string, page: string) {
-  await sleep(1000);
+  await sleep(1000); // Alchemy rate limit
   const baseUrl = `https://eth-mainnet.g.alchemy.com/nft/v2/${process.env.ALCHEMY_API_KEY}/getOwnersForContract`;
   const urlParams = new URLSearchParams({
     contractAddress: contract,

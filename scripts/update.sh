@@ -12,7 +12,7 @@ check_script_update() {
 
   if [ "$SCRIPT_HASH_BEFORE" != "$SCRIPT_HASH_AFTER" ]; then
       echo "Update script modified. Re-executing the updated script."
-      exec $0
+      exec $0 "$@"
       exit 0
   fi
 }
@@ -50,7 +50,7 @@ git checkout $BRANCH
 git pull origin $BRANCH
 
 # Check if the script has been updated during the pull
-check_script_update $SCRIPT_HASH
+check_script_update $SCRIPT_HASH "$@"
 
 # Step 2: Reinstall dependencies
 print_message "Reinstalling dependencies..."
