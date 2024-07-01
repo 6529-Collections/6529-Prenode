@@ -3,6 +3,9 @@ import { ALCHEMY_SETTINGS } from './constants';
 
 let alchemy: Alchemy | null = null;
 
+export const ALCHEMY_RATE_LIMIT = 1000;
+export const ALCHEMY_RATE_LIMIT_SHORT = 100;
+
 export function getAlchemyInstance(
   network: Network = Network.ETH_MAINNET
 ): Alchemy {

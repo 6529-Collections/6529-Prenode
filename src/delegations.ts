@@ -8,7 +8,7 @@ import {
   USE_CASE_SUB_DELEGATION
 } from './constants';
 import { DELEGATIONS_IFACE } from './abis/delegations';
-import { areEqualAddresses } from './helpers';
+import { areEqualAddresses, sleep } from './helpers';
 import {
   Event,
   EventType,
@@ -16,7 +16,7 @@ import {
   DelegationEvent
 } from './entities/IDelegation';
 import { Logger } from './logging';
-import { getAlchemyInstance } from './alchemy';
+import { ALCHEMY_RATE_LIMIT_SHORT, getAlchemyInstance } from './alchemy';
 import { sepolia } from '@wagmi/chains';
 
 let alchemy: Alchemy;
@@ -38,6 +38,7 @@ async function getAllDelegations(startingBlock: number, latestBlock: number) {
 }
 
 const getDelegationDetails = async (txHash: string) => {
+  await sleep(ALCHEMY_RATE_LIMIT_SHORT); // Alchemy rate limit
   const tx = await alchemy.core.getTransaction(txHash);
   if (tx) {
     const data = tx.data;

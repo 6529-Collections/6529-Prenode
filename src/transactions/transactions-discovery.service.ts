@@ -9,12 +9,13 @@ import {
   AssetTransfersWithMetadataResult,
   fromHex
 } from 'alchemy-sdk';
-import { getAlchemyInstance } from '../alchemy';
+import { ALCHEMY_RATE_LIMIT, getAlchemyInstance } from '../alchemy';
 import { Logger } from '../logging';
 import { Transaction } from '../entities/ITransaction';
 import { findTransactionValues } from './transaction_values';
 import { consolidateTransactions } from '../db';
 import { Time } from '../time';
+import { sleep } from '../helpers';
 
 export class TransactionsDiscoveryService {
   private readonly logger = Logger.get(TransactionsDiscoveryService.name);
@@ -82,6 +83,8 @@ export class TransactionsDiscoveryService {
         contract,
         pageKey
       );
+
+      await sleep(ALCHEMY_RATE_LIMIT); // Alchemy rate limit
       const { transfers, pageKey: nextPageKey } =
         await this.alchemy.core.getAssetTransfers(alchemyParams);
 
@@ -131,7 +134,7 @@ export class TransactionsDiscoveryService {
       category: [AssetTransfersCategory.ERC1155, AssetTransfersCategory.ERC721],
       contractAddresses: [contract],
       withMetadata: true,
-      maxCount: 150,
+      maxCount: 50,
       fromBlock: startingBlockHex,
       toBlock: toBlockHex,
       pageKey: pageKey
