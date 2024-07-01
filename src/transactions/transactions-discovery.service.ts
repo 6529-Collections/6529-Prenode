@@ -84,6 +84,7 @@ export class TransactionsDiscoveryService {
         pageKey
       );
 
+      await sleep(100); // Alchemy rate limit
       const { transfers, pageKey: nextPageKey } =
         await this.alchemy.core.getAssetTransfers(alchemyParams);
 
@@ -109,7 +110,6 @@ export class TransactionsDiscoveryService {
         timer = Time.now(); // reset timer
       }
       pageKey = nextPageKey;
-      await sleep(1000); // Alchemy rate limit
     } while (pageKey);
   }
 

@@ -23,7 +23,7 @@ import {
   WETH_TOKEN_ADDRESS
 } from '../constants';
 import { Transaction } from '../entities/ITransaction';
-import { areEqualAddresses } from '../helpers';
+import { areEqualAddresses, sleep } from '../helpers';
 import { ethers, Interface } from 'ethers';
 import { findTransactionsByHash } from '../db';
 import { Logger } from '../logging';
@@ -107,6 +107,7 @@ export const findTransactionValues = async (
 };
 
 async function resolveValue(t: Transaction) {
+  await sleep(100); // Alchemy rate limit
   const transaction = await alchemy.core.getTransaction(t.transaction);
   t.value = transaction ? parseFloat(Utils.formatEther(transaction.value)) : 0;
   t.royalties = 0;
@@ -119,6 +120,7 @@ async function resolveValue(t: Transaction) {
   }
 
   if (transaction) {
+    await sleep(100); // Alchemy rate limit
     const receipt = await alchemy.core.getTransactionReceipt(transaction?.hash);
     const logCount =
       receipt?.logs.filter(
@@ -210,6 +212,7 @@ async function resolveValue(t: Transaction) {
       toBlock: block
     };
 
+    await sleep(100); // Alchemy rate limit
     const internlTrfs = await alchemy.core.getAssetTransfers(settings);
     const filteredInternalTrfs = internlTrfs.transfers.filter(
       (it) =>

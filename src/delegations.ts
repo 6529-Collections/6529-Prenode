@@ -8,7 +8,7 @@ import {
   USE_CASE_SUB_DELEGATION
 } from './constants';
 import { DELEGATIONS_IFACE } from './abis/delegations';
-import { areEqualAddresses } from './helpers';
+import { areEqualAddresses, sleep } from './helpers';
 import {
   Event,
   EventType,
@@ -38,6 +38,7 @@ async function getAllDelegations(startingBlock: number, latestBlock: number) {
 }
 
 const getDelegationDetails = async (txHash: string) => {
+  await sleep(100);
   const tx = await alchemy.core.getTransaction(txHash);
   if (tx) {
     const data = tx.data;
