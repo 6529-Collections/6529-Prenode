@@ -119,7 +119,7 @@ async function getNFTResponse(alchemy: Alchemy, contract: string, key: any) {
     settings.pageKey = key;
   }
 
-  await sleep(100); // Alchemy rate limit
+  await sleep(500); // Alchemy rate limit
   const response = await alchemy.nft.getNftsForContract(contract, settings);
   return response;
 }

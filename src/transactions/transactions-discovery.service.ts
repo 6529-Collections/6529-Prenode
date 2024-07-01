@@ -84,7 +84,7 @@ export class TransactionsDiscoveryService {
         pageKey
       );
 
-      await sleep(100); // Alchemy rate limit
+      await sleep(500); // Alchemy rate limit
       const { transfers, pageKey: nextPageKey } =
         await this.alchemy.core.getAssetTransfers(alchemyParams);
 
