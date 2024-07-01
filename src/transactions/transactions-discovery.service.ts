@@ -84,7 +84,7 @@ export class TransactionsDiscoveryService {
         pageKey
       );
 
-      await sleep(500); // Alchemy rate limit
+      await sleep(1000); // Alchemy rate limit
       const { transfers, pageKey: nextPageKey } =
         await this.alchemy.core.getAssetTransfers(alchemyParams);
 
@@ -134,7 +134,7 @@ export class TransactionsDiscoveryService {
       category: [AssetTransfersCategory.ERC1155, AssetTransfersCategory.ERC721],
       contractAddresses: [contract],
       withMetadata: true,
-      maxCount: 150,
+      maxCount: 50,
       fromBlock: startingBlockHex,
       toBlock: toBlockHex,
       pageKey: pageKey

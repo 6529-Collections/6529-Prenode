@@ -92,12 +92,11 @@ export const findTransactionValues = async (
 
   const transactionsWithValues: Transaction[] = [];
 
-  await Promise.all(
-    transactions.map(async (t) => {
-      const parsedTransaction = await resolveValue(t);
-      transactionsWithValues.push(parsedTransaction);
-    })
-  );
+  for (const t of transactions) {
+    await sleep(100);
+    const parsedTransaction = await resolveValue(t);
+    transactionsWithValues.push(parsedTransaction);
+  }
 
   logger.info(
     `[PROCESSED ${transactionsWithValues.length} TRANSACTION VALUES]`
@@ -107,7 +106,6 @@ export const findTransactionValues = async (
 };
 
 async function resolveValue(t: Transaction) {
-  await sleep(500); // Alchemy rate limit
   const transaction = await alchemy.core.getTransaction(t.transaction);
   t.value = transaction ? parseFloat(Utils.formatEther(transaction.value)) : 0;
   t.royalties = 0;
@@ -120,7 +118,6 @@ async function resolveValue(t: Transaction) {
   }
 
   if (transaction) {
-    await sleep(500); // Alchemy rate limit
     const receipt = await alchemy.core.getTransactionReceipt(transaction?.hash);
     const logCount =
       receipt?.logs.filter(
@@ -212,7 +209,6 @@ async function resolveValue(t: Transaction) {
       toBlock: block
     };
 
-    await sleep(500); // Alchemy rate limit
     const internlTrfs = await alchemy.core.getAssetTransfers(settings);
     const filteredInternalTrfs = internlTrfs.transfers.filter(
       (it) =>

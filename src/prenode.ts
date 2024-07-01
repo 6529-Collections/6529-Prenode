@@ -40,9 +40,9 @@ cron.schedule(
   }
 );
 
-// transactions every 5 minutes
+// transactions every 2 minutes
 cron.schedule(
-  '*/5 * * * *',
+  '*/2 * * * *',
   async () => {
     if (RUNNING_TDH || RUNNING_UPDATE || RUNNING_TRX) {
       logger.info(
