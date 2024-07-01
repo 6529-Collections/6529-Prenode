@@ -92,7 +92,9 @@ aws ec2 create-key-pair --key-name $PRENODE_EC2_KEY_PAIR_NAME \
 chmod 400 ~/.ssh/$PRENODE_EC2_KEY_PAIR_NAME.pem;
 ```
 
-### 2.3 Get a domain name
+### 2.3 Domain ownership
+
+#### 2.3.1 Get a domain name
 
 Your node will require SSL, and therefore a domain name. You will need to provide this domain name in the next step.
 
@@ -101,6 +103,16 @@ The automated CloudFormation setup process will configure the domain name for yo
 So, before you proceed to the next step, go get a new domain name, or transfer an existing one to Route 53. You can do this by visiting the <a href="https://console.aws.amazon.com/route53/home" target="_blank" rel="noreferrer">Route 53 console</a>.
 
 In addition to the domain name, you will need the Hosted Zone ID for the domain. You can find this by selecting the domain and copying the Hosted Zone ID from the right-hand side of the page.
+
+#### 2.3.2 Link domain ownership
+
+Link your domain to your seize.io profile by signing a message with any Ethereum address that is part of your Identity consolidation.
+
+You can use any message signing tool, like <https://etherscan.io/verifiedSignatures>.
+
+The message should be ONLY the domain name (all lowercase) that you are using for your Prenode, with no protocol (leave out the "https://" part) and no trailing slash, eg: `prenode.seize.io`.
+
+When you sign with your connected Ethereum address, you will get a "signature hash". This hash will be sent out from your prenode to attest to your ownership of the domain.
 
 ### 2.4 Create the CloudFormation stack
 
