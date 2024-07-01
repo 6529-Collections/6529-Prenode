@@ -9,7 +9,7 @@ import {
   AssetTransfersWithMetadataResult,
   fromHex
 } from 'alchemy-sdk';
-import { getAlchemyInstance } from '../alchemy';
+import { ALCHEMY_RATE_LIMIT, getAlchemyInstance } from '../alchemy';
 import { Logger } from '../logging';
 import { Transaction } from '../entities/ITransaction';
 import { findTransactionValues } from './transaction_values';
@@ -84,7 +84,7 @@ export class TransactionsDiscoveryService {
         pageKey
       );
 
-      await sleep(1000); // Alchemy rate limit
+      await sleep(ALCHEMY_RATE_LIMIT); // Alchemy rate limit
       const { transfers, pageKey: nextPageKey } =
         await this.alchemy.core.getAssetTransfers(alchemyParams);
 

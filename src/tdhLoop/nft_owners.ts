@@ -2,6 +2,7 @@ import { NftContractOwner } from 'alchemy-sdk';
 import { NFTOwner } from '../entities/INFTOwner';
 import { Logger } from '../logging';
 import { sleep } from '../helpers';
+import { ALCHEMY_RATE_LIMIT } from '../alchemy';
 
 const logger = Logger.get('NFT_OWNERS');
 
@@ -42,7 +43,7 @@ async function getOwners(
 }
 
 async function getOwnersForPage(block: number, contract: string, page: string) {
-  await sleep(1000); // Alchemy rate limit
+  await sleep(ALCHEMY_RATE_LIMIT); // Alchemy rate limit
   const baseUrl = `https://eth-mainnet.g.alchemy.com/nft/v2/${process.env.ALCHEMY_API_KEY}/getOwnersForContract`;
   const urlParams = new URLSearchParams({
     contractAddress: contract,

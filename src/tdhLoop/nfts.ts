@@ -10,6 +10,7 @@ import { NFT } from '../entities/INFT';
 import { fetchMintDate } from '../db';
 import { NFTOwner } from '../entities/INFTOwner';
 import { sleep } from '../helpers';
+import { ALCHEMY_RATE_LIMIT } from '../alchemy';
 
 let alchemy: Alchemy;
 
@@ -119,7 +120,7 @@ async function getNFTResponse(alchemy: Alchemy, contract: string, key: any) {
     settings.pageKey = key;
   }
 
-  await sleep(1000); // Alchemy rate limit
+  await sleep(ALCHEMY_RATE_LIMIT); // Alchemy rate limit
   const response = await alchemy.nft.getNftsForContract(contract, settings);
   return response;
 }
