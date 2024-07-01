@@ -106,6 +106,10 @@ async function start() {
 
   await loadEnv();
 
+  logger.info(`[SYNCING TRANSACTIONS...]`);
+  await runTransactions();
+  logger.info(`[TRANSACTIONS SYNCED]`);
+
   await runTDH();
 
   await pingSeize();

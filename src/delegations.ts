@@ -38,7 +38,7 @@ async function getAllDelegations(startingBlock: number, latestBlock: number) {
 }
 
 const getDelegationDetails = async (txHash: string) => {
-  await sleep(100);
+  await sleep(100); // Alchemy rate limit
   const tx = await alchemy.core.getTransaction(txHash);
   if (tx) {
     const data = tx.data;

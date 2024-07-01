@@ -93,7 +93,7 @@ export const findTransactionValues = async (
   const transactionsWithValues: Transaction[] = [];
 
   for (const t of transactions) {
-    await sleep(100);
+    await sleep(100); // Alchemy rate limit
     const parsedTransaction = await resolveValue(t);
     transactionsWithValues.push(parsedTransaction);
   }
