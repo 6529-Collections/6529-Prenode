@@ -706,11 +706,13 @@ export async function fetchPingInfo() {
       `)
     )[0]?.total_tdh ?? 0
   );
-  const seizeProfile = process.env.SEIZE_PROFILE || 'N/A';
+  const ownerAddress = process.env.OWNER_ADDRESS || '';
+  const ownerSignatureHash = process.env.OWNER_SIGNATURE_HASH || '';
 
   return {
-    seizeProfile,
     domain,
+    ownerAddress,
+    ownerSignatureHash,
     tdh,
     block
   };
