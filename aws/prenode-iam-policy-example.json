@@ -15,6 +15,12 @@
             "Effect": "Allow",
             "Action": "iam:PassRole",
             "Resource": "arn:aws:iam::<your-account-id>:role/<specific-role-name>"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "iam:CreateServiceLinkedRole",
+            "Resource": "*",
+            "Condition": {}
         }
     ]
 }
