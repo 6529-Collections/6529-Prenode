@@ -419,6 +419,7 @@ pm2 restart 6529Prenode-api
 ### 4.2 Scripted update
 
 ```bash
+pm2 stop 6529Prenode
 scripts/update.sh
 ```
 
@@ -426,5 +427,6 @@ Note: The scripted update will by default also restore your local database to th
 If you want to disable the restore process, you can run:
 
 ```bash
+pm2 stop 6529Prenode
 scripts/update.sh --no-restore
 ```

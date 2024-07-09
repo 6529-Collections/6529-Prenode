@@ -4,6 +4,7 @@ import * as delegations from './delegationsLoop';
 import * as transactions from './transactionsLoop';
 import * as tdh from './tdhLoop';
 import cron from 'node-cron';
+import { DELEGATION_CONTRACT } from './constants';
 
 import {
   GRADIENT_CONTRACT,
@@ -109,6 +110,8 @@ async function start() {
   logger.info(`[SYNCING TRANSACTIONS...]`);
   await runTransactions();
   logger.info(`[TRANSACTIONS SYNCED]`);
+
+  await runDelegations(DELEGATION_CONTRACT.deploy_block);
 
   await runTDH();
 

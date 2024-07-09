@@ -41,9 +41,11 @@ export const ALCHEMY_SETTINGS = {
 export const DELEGATION_CONTRACT: {
   chain_id: number;
   contract: `0x${string}`;
+  deploy_block: number;
 } = {
   chain_id: 1,
-  contract: '0x2202CB9c00487e7e8EF21e6d8E914B32e709f43d'
+  contract: '0x2202CB9c00487e7e8EF21e6d8E914B32e709f43d',
+  deploy_block: 17114433
 };
 
 export const DELEGATION_ALL_ADDRESS =
