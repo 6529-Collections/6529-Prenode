@@ -29,6 +29,7 @@ async function getAllDelegations(startingBlock: number, latestBlock: number) {
 
   logger.info(`[FROM BLOCK ${startingBlockHex}] [TO BLOCK ${latestBlockHex}]`);
 
+  await sleep(ALCHEMY_RATE_LIMIT_SHORT); // Alchemy rate limit
   const response = await alchemy.core.getLogs({
     address: DELEGATION_CONTRACT.contract,
     fromBlock: startingBlockHex,
@@ -100,7 +101,7 @@ export const findDelegationTransactions = async (
         ? delResult.args.delegator
         : delResult.args.from;
       const to = delResult.args.delegationAddress;
-      const useCase = parseInt(delResult.args.useCase, 16);
+      const useCase = delResult.args.useCase;
 
       if (
         !areEqualAddresses(from, to) ||

@@ -42,8 +42,10 @@ async function handleDelegations(startBlock: number | undefined) {
     delegationsResponse.revocation
   );
 
-  if (delegationsResponse.consolidations.length > 0) {
+  if (delegationsResponse.consolidations.length > 0 && !startBlock) {
     await reconsolidateWallets(delegationsResponse.consolidations);
+  } else {
+    logger.info(`[SKIPPING RECONSOLIDATION]`);
   }
 
   return delegationsResponse;
