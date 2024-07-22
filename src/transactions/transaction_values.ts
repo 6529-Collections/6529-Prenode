@@ -17,7 +17,6 @@ import {
   NEXTGEN_CONTRACT,
   NEXTGEN_ROYALTIES_ADDRESS,
   NULL_ADDRESS,
-  OPENSEA_ADDRESS,
   ROYALTIES_ADDRESS,
   TRANSACTIONS_TABLE,
   WETH_TOKEN_ADDRESS
@@ -28,6 +27,7 @@ import { ethers, Interface } from 'ethers';
 import { findTransactionsByHash } from '../db';
 import { Logger } from '../logging';
 import { ALCHEMY_RATE_LIMIT_SHORT } from '../alchemy';
+import { SEAPORT_IFACE } from '../abis/opensea';
 
 const logger = Logger.get('TRANSACTION_VALUES');
 
@@ -38,17 +38,6 @@ const MINT_FROM_ADDRESS =
   '0x0000000000000000000000000000000000000000000000000000000000000000';
 
 let alchemy: Alchemy;
-let SEAPORT_IFACE: Interface;
-
-async function loadABIs() {
-  const f = await fetch(
-    `https://api.etherscan.io/api?module=contract&action=getabi&address=${OPENSEA_ADDRESS}&apikey=${process.env.ETHERSCAN_API_KEY}`
-  );
-  const abi: any = await f.json();
-  SEAPORT_IFACE = new ethers.Interface(abi.result);
-
-  logger.info(`[ROYALTIES] [ABIs LOADED] [SEAPORT ${f.status}]`);
-}
 
 function isZeroAddress(address: string) {
   return /^0x0+$/.test(address);
@@ -84,10 +73,6 @@ export const findTransactionValues = async (
     ...settings,
     apiKey: process.env.ALCHEMY_API_KEY
   });
-
-  if (!SEAPORT_IFACE) {
-    await loadABIs();
-  }
 
   logger.info(`[PROCESSING VALUES FOR ${transactions.length} TRANSACTIONS]`);
 
@@ -325,10 +310,6 @@ export const debugValues = async () => {
       ...ALCHEMY_SETTINGS,
       apiKey: process.env.ALCHEMY_API_KEY
     });
-  }
-
-  if (!SEAPORT_IFACE) {
-    await loadABIs();
   }
 
   // SAMPLE TRX HASHES
