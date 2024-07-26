@@ -234,6 +234,7 @@ export const updateTDH = async (
         Time.fromDate(lastTDHCalc).minusDays(1)
       )
   );
+  memes.sort((a, b) => a.id - b.id);
 
   await persistOwners([...memeOwners, ...gradientOwners, ...nextgenOwners]);
 
