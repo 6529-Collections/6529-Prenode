@@ -17,7 +17,7 @@ import oracleRoutes from './oracle.routes';
 const requestLogger = Logger.get('API_REQUEST');
 const logger = Logger.get('API');
 
-const API_PORT = 3001;
+const API_PORT = 3000;
 
 function requestLogMiddleware() {
   return (request: Request, response: Response, next: NextFunction) => {
