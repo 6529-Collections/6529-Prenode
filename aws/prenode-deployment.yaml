@@ -28,6 +28,13 @@ Parameters:
     Type: String
     Description: Use the default, unless you are testing a different branch.
     Default: main
+  OwnerAddress:
+    Type: String
+    Description: Ethereum address of the prenode owner.
+  OwnerSignatureHash:
+    Type: String
+    Description: Hash of the owner's address signing a message containing only the prenode domain name.
+  
 
 Resources:
   PrenodeDNSRecord:
@@ -227,6 +234,8 @@ Resources:
             DB_USER_READ=prenodeuser-read
             DB_PASS_READ=$USER_PASSWORD-read
             ALCHEMY_API_KEY=${AlchemyAPIKey}
+            OWNER_ADDRESS=${OwnerAddress}
+            OWNER_SIGNATURE_HASH=${OwnerSignatureHash}
             ' > .env.prenode
             bash scripts/setup.sh
             sudo env PATH=$PATH:/usr/local/bin /usr/local/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
