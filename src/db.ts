@@ -251,9 +251,7 @@ export async function fetchLatestTransactionsBlockNumber(
   const params: any = {};
   if (beforeDate) {
     sql += ` WHERE UNIX_TIMESTAMP(transaction_date) <= :date`;
-    const mydate = new Date(beforeDate.getTime());
-    mydate.setMinutes(mydate.getMinutes() - beforeDate.getTimezoneOffset());
-    params.date = mydate.getTime() / 1000;
+    params.date = beforeDate.getTime() / 1000;
   } else {
     sql += ` WHERE contract in (:contracts)`;
     params.contracts = [MEMES_CONTRACT, GRADIENT_CONTRACT];
