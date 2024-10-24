@@ -37,5 +37,9 @@
     "typescript": "^5.4.5"
   },
   "author": "The serverless webpack authors (https://github.com/elastic-coders/serverless-webpack)",
-  "license": "MIT"
+  "license": "MIT",
+  "overrides": {
+    "elliptic": "6.5.7",
+    "ws": "8.18.0"
+  }
 }

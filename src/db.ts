@@ -109,7 +109,8 @@ export async function createDataSource(
     database,
     entities: entities,
     synchronize: true,
-    logging: false
+    logging: false,
+    timezone: 'Etc/UTC'
   });
 
   await source.initialize().catch((error) => logger.error(error));
