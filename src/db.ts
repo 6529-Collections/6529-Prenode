@@ -109,7 +109,8 @@ export async function createDataSource(
     database,
     entities: entities,
     synchronize: true,
-    logging: false
+    logging: false,
+    timezone: 'Etc/UTC'
   });
 
   await source.initialize().catch((error) => logger.error(error));
@@ -250,7 +251,9 @@ export async function fetchLatestTransactionsBlockNumber(
   const params: any = {};
   if (beforeDate) {
     sql += ` WHERE UNIX_TIMESTAMP(transaction_date) <= :date`;
-    params.date = beforeDate.getTime() / 1000;
+    const mydate = new Date(beforeDate.getTime());
+    mydate.setMinutes(mydate.getMinutes() - beforeDate.getTimezoneOffset());
+    params.date = mydate.getTime() / 1000;
   } else {
     sql += ` WHERE contract in (:contracts)`;
     params.contracts = [MEMES_CONTRACT, GRADIENT_CONTRACT];
