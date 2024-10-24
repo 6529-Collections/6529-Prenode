@@ -72,9 +72,9 @@ cron.schedule(
   }
 );
 
-// RESTORE at 01:01 UTC on the RESTORE_DATE of every month
+// RESTORE at 02:01 UTC on the RESTORE_DATE of every month
 cron.schedule(
-  '1 1 * * *',
+  '1 2 * * *',
   async () => {
     if (RUNNING_UPDATE) {
       return;
