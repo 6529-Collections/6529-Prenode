@@ -28,9 +28,7 @@ export async function getAllNfts(memeOwners: NFTOwner[]): Promise<{
   const parsedMemes: NFT[] = await Promise.all(
     memes.map(async (m) => {
       const tokenId = parseInt(m.tokenId);
-      const owners = memeOwners.filter(
-        (o) => o.token_id === parseInt(m.tokenId)
-      );
+      const owners = memeOwners.filter((o) => tokenId === Number(o.token_id));
 
       let editionSize = owners.reduce((acc, o) => acc + o.balance, 0);
       if (tokenId === 8) {

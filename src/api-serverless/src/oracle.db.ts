@@ -3,7 +3,8 @@ import {
   NFTS_TABLE,
   MEMES_CONTRACT,
   GRADIENT_CONTRACT,
-  NEXTGEN_CONTRACT
+  NEXTGEN_CONTRACT,
+  TDH_BLOCKS_TABLE
 } from '../../constants';
 import { NFT } from '../../entities/INFT';
 import { sqlExecutor } from '../../sql-executor';
@@ -32,6 +33,13 @@ export const getBlock = async () => {
   return blockResult[0].block ?? 0;
 };
 
+const getMerkleRoot = async (block: number) => {
+  const merkleRootResult = await sqlExecutor.execute(
+    `SELECT merkle_root from ${TDH_BLOCKS_TABLE} WHERE block = ${block}`
+  );
+  return merkleRootResult[0].merkle_root ?? null;
+};
+
 const fetchBlockAndAddressTdh = async (address: string) => {
   const block = await getBlock();
   const sql = `
@@ -55,6 +63,7 @@ const fetchMemes = async (): Promise<NFT[]> => {
 export const fetchSingleAddressTDH = async (address: string) => {
   const { block, tdh } = await fetchBlockAndAddressTdh(address);
   const boost = tdh[0]?.boost ?? 1;
+  const merkleRoot = await getMerkleRoot(block);
   const seasonTdh = await fetchSingleAddressTDHMemesSeasons(address);
   const addressTdh: any = {
     tdh: formatNumber(tdh[0]?.boosted_tdh ?? 0),
@@ -70,7 +79,9 @@ export const fetchSingleAddressTDH = async (address: string) => {
   addressTdh['addresses'] = JSON.parse(
     tdh[0]?.wallets ?? JSON.stringify([address])
   ).map((w: string) => w.toLowerCase());
+
   addressTdh['block'] = block;
+  addressTdh['merkle_root'] = merkleRoot;
 
   return addressTdh;
 };
@@ -81,6 +92,7 @@ export const fetchSingleAddressTDHForNft = async (
   id: number
 ) => {
   const { block, tdh } = await fetchBlockAndAddressTdh(address);
+  const merkleRoot = await getMerkleRoot(block);
   const addressTdh = tdh[0]?.tdh;
   let nftTdh = 0;
   if (addressTdh) {
@@ -100,12 +112,14 @@ export const fetchSingleAddressTDHForNft = async (
   }
   return {
     tdh: formatNumber(nftTdh),
-    block
+    block,
+    merkle_root: merkleRoot
   };
 };
 
 export const fetchSingleAddressTDHBreakdown = async (address: string) => {
   const { block, tdh } = await fetchBlockAndAddressTdh(address);
+  const merkleRoot = await getMerkleRoot(block);
   const boost = tdh[0]?.boost ?? 1;
   return {
     memes_balance: tdh[0]?.memes_balance ?? 0,
@@ -120,12 +134,14 @@ export const fetchSingleAddressTDHBreakdown = async (address: string) => {
     nextgen: JSON.parse(tdh[0]?.nextgen ?? JSON.stringify([])).map((t: any) =>
       parseToken(boost, t)
     ),
-    block
+    block,
+    merkle_root: merkleRoot
   };
 };
 
 export const fetchTotalTDH = async () => {
   const block = await getBlock();
+  const merkleRoot = await getMerkleRoot(block);
   const sql = `
     SELECT SUM(boosted_tdh) as total_tdh, SUM(boosted_memes_tdh) as memes_tdh, SUM(boosted_gradients_tdh) as gradients_tdh, SUM(boosted_nextgen_tdh) as nextgen_tdh from ${CONSOLIDATED_WALLETS_TDH_TABLE}
   `;
@@ -142,11 +158,13 @@ export const fetchTotalTDH = async () => {
     totals[`memes_tdh_szn${s.season}`] = s.tdh;
   });
   totals['block'] = block;
+  totals['merkle_root'] = merkleRoot;
   return totals;
 };
 
 export const fetchNfts = async (contract?: string, id?: string) => {
   const block = await getBlock();
+  const merkleRoot = await getMerkleRoot(block);
   let sql = `SELECT * FROM ${NFTS_TABLE}`;
   if (contract) {
     let contractQuery = contract.toLowerCase();
@@ -175,12 +193,14 @@ export const fetchNfts = async (contract?: string, id?: string) => {
 
   return {
     nfts,
-    block
+    block,
+    merkle_root: merkleRoot
   };
 };
 
 export const fetchSingleAddressTDHMemesSeasons = async (address: string) => {
   const { block, tdh } = await fetchBlockAndAddressTdh(address);
+  const merkleRoot = await getMerkleRoot(block);
   const memeNfts = await fetchMemes();
   const boost = tdh[0]?.boost ?? 1;
   const memeSeasons = new Map<number, number[]>();
@@ -211,12 +231,14 @@ export const fetchSingleAddressTDHMemesSeasons = async (address: string) => {
 
   return {
     seasons,
-    block
+    block,
+    merkle_root: merkleRoot
   };
 };
 
 export async function fetchTDHAbove(value: number, includeEntries: boolean) {
   const block = await getBlock();
+  const merkleRoot = await getMerkleRoot(block);
 
   const sql = `
     SELECT * from ${CONSOLIDATED_WALLETS_TDH_TABLE} 
@@ -226,7 +248,8 @@ export async function fetchTDHAbove(value: number, includeEntries: boolean) {
   const tdh = await sqlExecutor.execute(sql);
   const response: any = {
     count: tdh.length,
-    block
+    block,
+    merkle_root: merkleRoot
   };
   if (includeEntries) {
     response.entries = tdh.map((t: any) => {
@@ -234,7 +257,8 @@ export async function fetchTDHAbove(value: number, includeEntries: boolean) {
         consolidation_key: t.consolidation_key,
         tdh: t.boosted_tdh,
         addresses: JSON.parse(t.wallets).map((w: string) => w.toLowerCase()),
-        block
+        block,
+        merkle_root: merkleRoot
       };
     });
   }
@@ -244,7 +268,7 @@ export async function fetchTDHAbove(value: number, includeEntries: boolean) {
 
 export async function fetchTDHPercentile(percentile: number) {
   const block = await getBlock();
-
+  const merkleRoot = await getMerkleRoot(block);
   const percentileValue = percentile / 100;
   const query = `
     WITH ranked_data AS (
@@ -274,12 +298,14 @@ export async function fetchTDHPercentile(percentile: number) {
     percentile,
     tdh: tdhPercentileValue,
     count_in_percentile: countInPercentile,
-    block
+    block,
+    merkle_root: merkleRoot
   };
 }
 
 export async function fetchTDHCutoff(cutoff: number) {
   const block = await getBlock();
+  const merkleRoot = await getMerkleRoot(block);
 
   const query = `
     SELECT * from ${CONSOLIDATED_WALLETS_TDH_TABLE} 
@@ -298,12 +324,14 @@ export async function fetchTDHCutoff(cutoff: number) {
   return {
     tdh: leastTdh,
     entries,
-    block
+    block,
+    merkle_root: merkleRoot
   };
 }
 
 export async function fetchSeasonsTDH(season?: string) {
   const block = await getBlock();
+  const merkleRoot = await getMerkleRoot(block);
 
   let filters = 'WHERE season > 0';
   let params: any = {};
@@ -328,6 +356,7 @@ export async function fetchSeasonsTDH(season?: string) {
   });
   return {
     seasons,
-    block
+    block,
+    merkle_root: merkleRoot
   };
 }

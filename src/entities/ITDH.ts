@@ -1,4 +1,11 @@
-import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  PrimaryColumn,
+  UpdateDateColumn
+} from 'typeorm';
 import {
   CONSOLIDATED_WALLETS_TDH_TABLE,
   TDH_BLOCKS_TABLE,
@@ -7,7 +14,10 @@ import {
 import { BlockEntity } from './IBlock';
 
 @Entity(TDH_BLOCKS_TABLE)
-export class TDHBlock extends BlockEntity {}
+export class TDHBlock extends BlockEntity {
+  @Column({ type: 'varchar', length: 200, nullable: true })
+  merkle_root!: string | null;
+}
 
 export class BaseTDHFields {
   @Column({ type: 'int', nullable: false })

@@ -31,6 +31,7 @@ import { insertWithoutUpdate, resetRepository } from './orm_helpers';
 import { NFTOwner } from './entities/INFTOwner';
 import { getBlock } from './api-serverless/src/oracle.db';
 import { getServerName } from './exec_commands';
+import { computeMerkleRoot } from './tdhLoop/tdh_merkle';
 
 const mysql = require('mysql');
 
@@ -245,18 +246,14 @@ export async function persistNftDelegationBlock(
 }
 
 export async function fetchLatestTransactionsBlockNumber(
-  beforeDate?: Date
+  beforeDate: Date
 ): Promise<number> {
-  let sql = `SELECT block FROM ${TRANSACTIONS_TABLE}`;
-  const params: any = {};
-  if (beforeDate) {
-    sql += ` WHERE UNIX_TIMESTAMP(transaction_date) <= :date`;
-    params.date = beforeDate.getTime() / 1000;
-  } else {
-    sql += ` WHERE contract in (:contracts)`;
-    params.contracts = [MEMES_CONTRACT, GRADIENT_CONTRACT];
-  }
-  sql += ` order by block desc limit 1;`;
+  const sql = `SELECT block FROM ${TRANSACTIONS_TABLE} 
+    WHERE UNIX_TIMESTAMP(transaction_date) <= :date 
+    order by block desc limit 1;`;
+  let date = beforeDate.getTime() / 1000;
+  date -= beforeDate.getTimezoneOffset() * 60;
+  const params = { date };
   const r = await sqlExecutor.execute(sql, params);
   return r.length > 0 ? r[0].block : 0;
 }
@@ -457,9 +454,20 @@ export async function persistTDH(
 }
 
 export async function persistTDHBlock(block: number, timestamp: Date) {
+  const merkleRoot = await computeMerkleRoot();
+
   await getDataSource()
     .getRepository(TDHBlock)
-    .upsert([{ block: block, timestamp: timestamp.getTime() }], ['block']);
+    .upsert(
+      [
+        {
+          block: block,
+          timestamp: timestamp.getTime(),
+          merkle_root: merkleRoot
+        }
+      ],
+      ['block']
+    );
 }
 
 export async function persistConsolidatedTDH(
