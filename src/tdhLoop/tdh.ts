@@ -5,6 +5,7 @@ import {
   MEME_8_BURN_TRANSACTION,
   NEXTGEN_CONTRACT,
   NULL_ADDRESS,
+  TRANSACTIONS_TABLE,
   WALLETS_TDH_TABLE
 } from '../constants';
 import { DefaultBoost, TDH, TokenTDH } from '../entities/ITDH';
@@ -25,11 +26,11 @@ import {
 import { ConnectionWrapper, sqlExecutor } from '../sql-executor';
 import { Logger } from '../logging';
 import { NFT } from '../entities/INFT';
-import { fetchNftOwners } from './nft_owners';
 import { getAllNfts } from './nfts';
 import { consolidateTDH } from './tdh_consolidation';
 import { Time } from '../time';
 import { processNftTdh } from './tdh_nfts';
+import { extractNFTOwners } from './tdh_owners';
 
 const logger = Logger.get('TDH');
 
@@ -224,15 +225,35 @@ export const updateTDH = async (
     );
   }
 
-  const memeOwners = await fetchNftOwners(block, MEMES_CONTRACT);
-  const gradientOwners = await fetchNftOwners(block, GRADIENT_CONTRACT);
-  const nextgenOwners = await fetchNftOwners(block, NEXTGEN_CONTRACT);
+  const transactions = await sqlExecutor.execute(
+    `select * from ${TRANSACTIONS_TABLE} where block <= :block and contract in (:contracts)`,
+    {
+      block,
+      contracts: TDH_CONTRACTS
+    }
+  );
+
+  logger.info(`[TRANSACTIONS COUNT ${transactions.length}]`);
+
+  const owners = await extractNFTOwners(transactions);
+  logger.info(`[OWNERS COUNT ${owners.length}]`);
+
+  const memeOwners = owners.filter((o) =>
+    areEqualAddresses(o.contract, MEMES_CONTRACT)
+  );
+  const gradientOwners = owners.filter((o) =>
+    areEqualAddresses(o.contract, GRADIENT_CONTRACT)
+  );
+  const nextgenOwners = owners.filter((o) =>
+    areEqualAddresses(o.contract, NEXTGEN_CONTRACT)
+  );
 
   const {
     memes: initialMemes,
     gradients,
     nextgen
   } = await getAllNfts(memeOwners);
+
   const memes = initialMemes.filter(
     (m) =>
       m.mint_date &&
@@ -240,15 +261,15 @@ export const updateTDH = async (
         Time.fromDate(lastTDHCalc).minusDays(1)
       )
   );
+
   memes.sort((a, b) => a.id - b.id);
 
   await persistOwners([...memeOwners, ...gradientOwners, ...nextgenOwners]);
 
-  const HODL_INDEX = memes.reduce((acc, m) => Math.max(acc, m.edition_size), 0);
   const ADJUSTED_SEASONS = buildSeasons(memes);
 
   logger.info(
-    `[MEMES] : [TOKENS ${memes.length}] : [OWNERS ${memeOwners.length}] : [SEASONS ${ADJUSTED_SEASONS.length}] : [HODL_INDEX ${HODL_INDEX}]`
+    `[MEMES] : [TOKENS ${memes.length}] : [OWNERS ${memeOwners.length}] : [SEASONS ${ADJUSTED_SEASONS.length}]`
   );
   logger.info(
     `[GRADIENTS] : [TOKENS ${gradients.length}] : [OWNERS ${gradientOwners.length}]`
@@ -258,6 +279,11 @@ export const updateTDH = async (
   );
 
   const ADJUSTED_NFTS = [...memes, ...gradients, ...nextgen];
+  const HODL_INDEX = ADJUSTED_NFTS.reduce(
+    (acc, m) => Math.max(acc, m.edition_size),
+    0
+  );
+  logger.info(`[HODL_INDEX ${HODL_INDEX}]`);
 
   const combinedAddresses = new Set<string>();
 
@@ -271,8 +297,7 @@ export const updateTDH = async (
       combinedAddresses.add(w.wallet.toLowerCase())
     );
 
-    const nftOwners = [...memeOwners, ...gradientOwners, ...nextgenOwners];
-    nftOwners.forEach((w) => combinedAddresses.add(w.address.toLowerCase()));
+    owners.forEach((w) => combinedAddresses.add(w.address.toLowerCase()));
   }
 
   logger.info(
@@ -478,14 +503,16 @@ export const updateTDH = async (
   );
 
   await persistTDH(block, rankedTdh, startingWallets);
-  await persistTDHBlock(block, timestamp);
   await consolidateTDH(block, ADJUSTED_NFTS, startingWallets);
   await processNftTdh(ADJUSTED_NFTS);
+
+  const merkleRoot = await persistTDHBlock(block, timestamp);
 
   return {
     block: block,
     timestamp: timestamp,
-    tdh: rankedTdh
+    tdh: rankedTdh,
+    merkleRoot: merkleRoot
   };
 };
 
@@ -718,11 +745,18 @@ function getTokenDatesFromConsolidation(
     if (!tokenDatesMap[wallet]) {
       tokenDatesMap[wallet] = [];
     }
-
     tokenDatesMap[wallet].push(...dates);
   }
 
   function removeDates(wallet: string, count: number) {
+    if (!tokenDatesMap[wallet]) {
+      console.log(
+        'hi i am wallet',
+        wallet,
+        tokenDatesMap,
+        consolidationTransactions
+      );
+    }
     const removeDates = tokenDatesMap[wallet].splice(
       tokenDatesMap[wallet].length - count,
       count
@@ -730,7 +764,7 @@ function getTokenDatesFromConsolidation(
     return removeDates;
   }
 
-  consolidationTransactions
+  consolidationTransactions = consolidationTransactions
     .map((c) => {
       c.transaction_date = parseUTCDateString(c.transaction_date);
       c.from_address = c.from_address.toLowerCase();
@@ -745,13 +779,34 @@ function getTokenDatesFromConsolidation(
         return dateComparison;
       }
 
-      const aInConsolidations = consolidations.some((c) =>
-        areEqualAddresses(c, a.from_address)
+      const aInConsolidations = Number(
+        consolidations.some(
+          (c) =>
+            !areEqualAddresses(c, currentWallet) &&
+            areEqualAddresses(c, a.from_address)
+        )
       );
-      const bInConsolidations = consolidations.some((c) =>
-        areEqualAddresses(c, b.from_address)
+
+      const bInConsolidations = Number(
+        consolidations.some(
+          (c) =>
+            !areEqualAddresses(c, currentWallet) &&
+            areEqualAddresses(c, b.from_address)
+        )
       );
-      return Number(bInConsolidations) - Number(aInConsolidations);
+
+      if (aInConsolidations || bInConsolidations) {
+        return bInConsolidations - aInConsolidations;
+      }
+
+      if (areEqualAddresses(a.to_address, currentWallet)) {
+        return -1;
+      }
+      if (areEqualAddresses(b.to_address, currentWallet)) {
+        return 1;
+      }
+
+      return 0;
     });
 
   for (const transaction of consolidationTransactions) {
