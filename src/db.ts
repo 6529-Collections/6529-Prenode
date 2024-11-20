@@ -715,9 +715,13 @@ export async function fetchPingInfo() {
       `)
     )[0]?.total_tdh ?? 0
   );
+  const ownerAddress = process.env.OWNER_ADDRESS || '';
+  const ownerSignatureHash = process.env.OWNER_SIGNATURE_HASH || '';
 
   return {
     domain,
+    ownerAddress,
+    ownerSignatureHash,
     tdh,
     block
   };

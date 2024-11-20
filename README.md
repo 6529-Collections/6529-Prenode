@@ -37,6 +37,8 @@ To run the Prenode, you'll need a domain name, a database, a server configured w
 
 Since the setup of all these things can be a little tricky, we've provided a CloudFormation script that will automate much of the setup process for you, directly in your own AWS account. This script will create the required EC2 instance, RDS instance, and a Route 53 domain, and configure them all to work together in a standalone VPC environment (and no, you don't need to know what all that means to get it going). All told, this configuration should run for less than $50/month (likely less if you have free tier resources available).
 
+A familiarity with (or strong determination to learn) the AWS console and the AWS CLI tool is required to complete the setup.
+
 Experienced cloud computing users who want to run Prenode in a different context can use the automated scripts provided here to work out how to proceed.
 
 The Prenode endpoints are documented with OpenAPI Definitions, and published from the repo: [https://6529-collections.github.io/6529-Prenode/docs](https://6529-collections.github.io/6529-Prenode/docs).
@@ -45,9 +47,11 @@ The Prenode endpoints are documented with OpenAPI Definitions, and published fro
 
 You'll need just a few things in place before starting the automated setup process.
 
+Do not skip any steps, and do not proceed if a step doesn't complete successfully. Reach out for help if you get stuck.
+
 **Prerequisites:**
 
-- You need an AWS account, of course! If you don't have one, you can create one for free (but will be required to register a payment method). You'll also need just a little familiarity with using the AWS console (<a href="https://aws.amazon.com/" target="_blank" rel="noreferrer">Sign in now</a>) and the AWS CLI (command line interface) tool (<a href="https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html" target="_blank" rel="noreferrer">installation guide</a>).
+- You need an AWS account, of course! If you don't have one, you can create one for free (but will be required to register a payment method). You'll also need familiarity with using the AWS console (<a href="https://aws.amazon.com/" target="_blank" rel="noreferrer">Sign in now</a>) and the AWS CLI (command line interface) tool (<a href="https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html" target="_blank" rel="noreferrer">installation guide</a>).
 
 - Since the node is required to run securely over HTTPS, you'll need a domain name for an SSL certificate. The automated setup process will then get a free cert for you.
 
@@ -88,7 +92,9 @@ aws ec2 create-key-pair --key-name $PRENODE_EC2_KEY_PAIR_NAME \
 chmod 400 ~/.ssh/$PRENODE_EC2_KEY_PAIR_NAME.pem;
 ```
 
-### 2.3 Get a domain name
+### 2.3 Domain ownership
+
+#### 2.3.1 Get a domain name
 
 Your node will require SSL, and therefore a domain name. You will need to provide this domain name in the next step.
 
@@ -97,6 +103,16 @@ The automated CloudFormation setup process will configure the domain name for yo
 So, before you proceed to the next step, go get a new domain name, or transfer an existing one to Route 53. You can do this by visiting the <a href="https://console.aws.amazon.com/route53/home" target="_blank" rel="noreferrer">Route 53 console</a>.
 
 In addition to the domain name, you will need the Hosted Zone ID for the domain. You can find this by selecting the domain and copying the Hosted Zone ID from the right-hand side of the page.
+
+#### 2.3.2 Link domain ownership
+
+Link your domain to your seize.io profile by signing a message with any Ethereum address that is part of your Identity consolidation.
+
+You can use any message signing tool, like <https://etherscan.io/verifiedSignatures>.
+
+The message should be ONLY the domain name (all lowercase) that you are using for your Prenode, with no protocol (leave out the "https://" part) and no trailing slash, eg: `prenode.seize.io`.
+
+When you sign with your connected Ethereum address, you will get a "signature hash". This hash will be sent out from your prenode to attest to your ownership of the domain.
 
 ### 2.4 Create the CloudFormation stack
 
@@ -108,23 +124,28 @@ Or, you can run the commands below in your local terminal to create the stack an
 
 Set these values in your local environment (in addition to PRENODE_EC2_KEY_PAIR_NAME, which was done above) to make calling the CloudFormation script easier. You'll only need them once, to fire off the CloudFormation script from your command line. Copy the below into your CLI one at a time (with updated values) to save the values temporarily in your environment (until you close the CLI).
 
-Replace the `your-*` values with what your stack should use:
+Replace the `your-*` values with what your stack should use.
 
-`export PRENODE_DOMAIN=your-domain-name # What FQDN do you want to use for accessing your Prenode?`
-
-`export PRENODE_HOSTED_ZONE_ID=your-route53_hosted_zone_id # Copy this directly from the Route 53 console`
-
-`export PRENODE_EMAIL=your-email # Used for administrative contact and SSL certificate registration`
-
-`export PRENODE_AMI_ID=your-ami-id # The AMI ID for the Ubuntu image you found`
-
-`export PRENODE_DB_PASSWORD=your-long-db-password-less-than-40-chars # Pick a new password for the database that will be created`
-
-`export ALCHEMY_API_KEY=your-alchemy-api-key # Copy this from the Alchemy API console`
+1. What fully-qualified domain name do you want to use for accessing your Prenode? (no protocol, no trailing slash):
+   - `export PRENODE_DOMAIN=your-domain-name`
+1. What is the Ethereum address you want to link this Prenode to? (for seize.io Identity):
+   - `export PRENODE_OWNER_ADDRESS=your-ethereum-address`
+1. Use the Owner Address to sign a message (containing only the domain above) to get the signature hash:
+   - `export OWNER_SIGNATURE_HASH=signature-hash-of-message`
+1. What is the Hosted Zone ID for the domain you are using? (from Route 53 console):
+   - `export PRENODE_HOSTED_ZONE_ID=your-route53_hosted_zone_id`
+1. What email address will you use for administrative contact and SSL certificate registration?
+    - `export PRENODE_EMAIL=your-email`
+1. What is the AMI ID for the Ubuntu image you found?
+   - `export PRENODE_AMI_ID=your-ami-id`
+1. Create a new password for the Prenode database (only letters and numbers, from 20-40 characters):
+    - `export PRENODE_DB_PASSWORD=your-long-db-password-less-than-40-chars`
+1. What is your Alchemy API key, copied from the Alchemy Apps dashboard?
+   - `export ALCHEMY_API_KEY=your-alchemy-api-key`
 
 To keep any of these around for future terminal sessions, you can add them to your shell profile (e.g. `~/.bashrc`).
 
-Run the following command to create the CloudFormation stack:
+Now, you can run the following command to create the CloudFormation stack:
 
 ```bash
 aws cloudformation create-stack \
@@ -137,6 +158,8 @@ aws cloudformation create-stack \
                ParameterKey=KeyName,ParameterValue=$PRENODE_EC2_KEY_PAIR_NAME \
                ParameterKey=HostedZoneId,ParameterValue=$PRENODE_HOSTED_ZONE_ID \
                ParameterKey=AlchemyAPIKey,ParameterValue=$ALCHEMY_API_KEY \
+               ParameterKey=OwnerAddress,ParameterValue=$PRENODE_SEIZE_PROFILE \
+               ParameterKey=OwnerSignatureHash,ParameterValue=$PRENODE_SEIZE_PROFILE \
   --profile 6529Prenode
 ```
 
@@ -166,20 +189,20 @@ Now you can SSH into your EC2 instance, if you want to check the configuration:
 ssh -i ~/.ssh/$PRENODE_EC2_KEY_PAIR_NAME.pem ubuntu@$PRENODE_IP
 ```
 
-The source code can be found in `~/6529-Prenode`. You can find logs in `~/.pm2/logs`.
+On the server, the source code can be found in `~/6529-Prenode`. From that directory, you can view logs by running `pm2 logs`.
 
 ### 2.6 Verify
 
 Once the CloudFormation stack has completed building out all resources, verify it is working by navigating to the domain name you provided in the CloudFormation script:
 
 ```bash
-https://YOUR.DOMAIN.NAME/oracle/address/0xADDRESS
+https://YOUR.DOMAIN.NAME/oracle/tdh/total
 ```
 
 Compare the response with
 
 ```bash
-https://api.seize.io/oracle/address/0xADDRESS
+https://api.seize.io/oracle/tdh/total
 ```
 
 If you registered a new domain name, be sure to verify your email address within 15 days, as required by ICANN. Look for the subject "Verify your email address for..." in your inbox.
@@ -192,11 +215,11 @@ Thank you for supporting decentralization!
 
 Be sure you have removed the permissive IAM policy from any user accounts you created for this process.
 
-If you want to fully remove the Prenode resources from your AWS account, you can simply delete the CloudFormation stack to remove all resources created by the script. The easiest way to do so is from the CloudFormation console, by selecting the stack and choosing "Delete Stack". Be sure to Re-attach the Prenode IAM policy to your user account, to provide adequate access to complete the cleanup.
+If you want to fully remove the Prenode resources from your AWS account, you can simply delete the CloudFormation stack to remove all resources created by the script. The easiest way to do so is from the CloudFormation console, by selecting the stack and choosing "Delete Stack". Be sure to re-attach the Prenode IAM policy to your user account, to provide adequate access to complete the cleanup.
 
 ## 3. Manual configuration
 
-If you'd like to run the 6529 Prenode in any other context (Advanced), you can manually configure it using the following steps.
+If you'd like to run the 6529 Prenode in any other context (advanced), you can manually configure it using the following steps.
 
 DO NOT PROCEED if your AWS setup is complete.
 
