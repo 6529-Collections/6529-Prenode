@@ -89,11 +89,11 @@ cron.schedule(
   }
 );
 
-// ping seize every hour at 31 minutes
+// ping 6529.io every hour at 31 minutes
 cron.schedule(
   '31 * * * *',
   async () => {
-    await pingSeize();
+    await ping6529io();
   },
   {
     timezone: 'Etc/UTC'
@@ -112,7 +112,7 @@ async function start() {
 
   await runTDH();
 
-  await pingSeize();
+  await ping6529io();
 
   const diff = start.diffFromNow().formatAsDuration();
   logger.info(`[START SCRIPT COMPLETE IN ${diff}]`);
@@ -181,12 +181,12 @@ function runUpdate(restore?: boolean) {
   });
 }
 
-async function pingSeize() {
+async function ping6529io() {
   try {
     const info = await fetchPingInfo();
-    logger.info(`[PING SEIZE] : [INFO ${JSON.stringify(info)}]`);
+    logger.info(`[PING 6529.io] : [INFO ${JSON.stringify(info)}]`);
     const response = await fetch(
-      'https://api.seize.io/oracle/register-prenode',
+      'https://api.6529.io/oracle/register-prenode',
       {
         method: 'POST',
         headers: {
@@ -197,12 +197,12 @@ async function pingSeize() {
     );
     const body = await response.json();
     logger.info(
-      `[PING SEIZE] : [STATUS ${response.status}] : [BODY ${JSON.stringify(
+      `[PING 6529.io] : [STATUS ${response.status}] : [BODY ${JSON.stringify(
         body
       )}]`
     );
   } catch (e: any) {
-    logger.error(`[PING SEIZE] : [ERROR ${e.message}]`);
+    logger.error(`[PING 6529.io] : [ERROR ${e.message}]`);
   }
 }
 
