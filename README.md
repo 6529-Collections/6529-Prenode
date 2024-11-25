@@ -179,7 +179,7 @@ https://YOUR.DOMAIN.NAME/oracle/address/0xADDRESS
 Compare the response with
 
 ```bash
-https://api.seize.io/oracle/address/0xADDRESS
+https://api.6529.io/oracle/address/0xADDRESS
 ```
 
 If you registered a new domain name, be sure to verify your email address within 15 days, as required by ICANN. Look for the subject "Verify your email address for..." in your inbox.
@@ -249,7 +249,7 @@ The database expects some initial data. Choose to load EITHER from the latest sn
 
 ## 3.2.1 Restore snapshot
 
-The best option is usually to restore a recent seize.io snapshot.
+The best option is usually to restore a recent 6529.io snapshot.
 
 Populate your Prenode database from the latest snapshot using the following
 
@@ -365,7 +365,7 @@ https://YOUR-DOMAIN-NAME/oracle/address/0xADDRESS
 Compare the response with
 
 ```bash
-https://api.seize.io/oracle/address/0xADDRESS
+https://api.6529.io/oracle/address/0xADDRESS
 ```
 
 ## 4 Updates

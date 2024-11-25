@@ -186,7 +186,7 @@ async function pingSeize() {
     const info = await fetchPingInfo();
     logger.info(`[PING SEIZE] : [INFO ${JSON.stringify(info)}]`);
     const response = await fetch(
-      'https://api.seize.io/oracle/register-prenode',
+      'https://api.6529.io/oracle/register-prenode',
       {
         method: 'POST',
         headers: {
