@@ -75,6 +75,14 @@ const seasons: MemesSeason[] = [
     count: 32,
     name: 'SZN9',
     display: 'SZN9'
+  },
+  {
+    id: 10,
+    start_index: 311,
+    end_index: 342,
+    count: 32,
+    name: 'SZN10',
+    display: 'SZN10'
   }
 ];
 
@@ -215,6 +223,20 @@ test('calculateBoost should calculate the boost correctly', () => {
         nakamoto: 0
       },
       getSeasonSet(9),
+      []
+    ).total
+  ).toBe(1.05);
+
+  // s10 set
+  expect(
+    calculateBoost(
+      seasons,
+      0,
+      {
+        genesis: 0,
+        nakamoto: 0
+      },
+      getSeasonSet(10),
       []
     ).total
   ).toBe(1.05);
@@ -385,7 +407,7 @@ test('calculateBoost should calculate the boost correctly', () => {
       getSeasonSet(3),
       []
     ).total
-  ).toBe(1.45);
+  ).toBe(1.5);
 
   // 2set
   expect(
@@ -399,7 +421,7 @@ test('calculateBoost should calculate the boost correctly', () => {
       getSeasonSet(3),
       []
     ).total
-  ).toBe(1.47);
+  ).toBe(1.52);
 
   // 3set
   expect(
@@ -413,7 +435,7 @@ test('calculateBoost should calculate the boost correctly', () => {
       getSeasonSet(3),
       []
     ).total
-  ).toBe(1.49);
+  ).toBe(1.54);
 
   // 4set
   expect(
@@ -427,7 +449,7 @@ test('calculateBoost should calculate the boost correctly', () => {
       getSeasonSet(3),
       []
     ).total
-  ).toBe(1.49);
+  ).toBe(1.54);
 
   // 1set + 4gradient
   expect(
@@ -441,7 +463,7 @@ test('calculateBoost should calculate the boost correctly', () => {
       getSeasonSet(3),
       [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }]
     ).total
-  ).toBe(1.51);
+  ).toBe(1.56);
 
   // 3set + 3gradient
   expect(
@@ -455,7 +477,7 @@ test('calculateBoost should calculate the boost correctly', () => {
       getSeasonSet(3),
       [{ id: 1 }, { id: 2 }, { id: 3 }]
     ).total
-  ).toBe(1.55);
+  ).toBe(1.6);
 
   // 3set + naka + genesis + 3gradient
   expect(
@@ -469,7 +491,7 @@ test('calculateBoost should calculate the boost correctly', () => {
       getSeasonSet(3),
       [{ id: 1 }, { id: 2 }, { id: 3 }]
     ).total
-  ).toBe(1.55);
+  ).toBe(1.6);
 
   // s3 + s4 set
   expect(
