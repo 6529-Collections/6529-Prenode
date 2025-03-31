@@ -16,7 +16,7 @@ import { fetchPingInfo } from './db';
 
 const logger = Logger.get('PRE_NODE');
 
-const RESTORE_DATE = 19;
+const RESTORE_DATE = 1;
 
 let RUNNING_UPDATE = false;
 let RUNNING_TDH = false;
