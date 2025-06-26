@@ -1,6 +1,5 @@
 import { MemesSeason } from '../entities/ISeason';
 import { TokenTDH } from '../entities/ITDH';
-import { Time } from '../time';
 
 const calculateBoost = require('../tdhLoop/tdh').calculateBoost;
 
