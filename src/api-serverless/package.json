@@ -27,7 +27,7 @@
     "@serverless/typescript": "^3.38.0",
     "@types/node": "^20.12.7",
     "@types/swagger-ui-express": "^4.1.6",
-    "esbuild": "^0.20.2",
+    "esbuild": "^0.25.4",
     "eslint": "^9.0.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
