@@ -82,7 +82,20 @@ export const findDelegationTransactions = async (
 
   const timestamp = (await alchemy.core.getBlock(latestBlock)).timestamp;
 
-  const allDelegations = await getAllDelegations(startingBlock, latestBlock);
+  const maxBlockRange = 500;
+  let currentStart = startingBlock;
+  let allDelegations: any[] = [];
+
+  while (currentStart <= latestBlock) {
+    const currentEnd = Math.min(currentStart + maxBlockRange - 1, latestBlock);
+
+    logger.info(`[FETCHING BLOCK RANGE ${currentStart} - ${currentEnd}]`);
+
+    const chunkDelegations = await getAllDelegations(currentStart, currentEnd);
+    allDelegations.push(...chunkDelegations);
+
+    currentStart = currentEnd + 1;
+  }
 
   logger.info(`[FOUND ${allDelegations.length} NEW TRANSACTIONS]`);
 
